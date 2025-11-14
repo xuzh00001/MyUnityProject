@@ -21,7 +21,7 @@ public class TargetEventLogger : MonoBehaviour
     {
         float time = Time.realtimeSinceStartup - startTime;
         writer.WriteLine($"{time:F3},{trial},{targetName},{targetPosition}");
-        writer.Flush(); // 确保即使中途退出也不会丢数据
+        writer.Flush(); // To prevent data loss due to mid-game exit
     }
 
     void OnApplicationQuit()

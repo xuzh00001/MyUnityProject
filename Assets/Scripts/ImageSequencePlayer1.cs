@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ImageSequencePlayer1 : MonoBehaviour
 {
-    public Renderer screenRenderer; // 指向 Screen_new 的 MeshRenderer
+    public Renderer screenRenderer; // point to MeshRenderer of Screen_new
     public EyeTrackerRecorder eyeRecorder;
     public TargetEventLogger targetLogger;
 
@@ -17,46 +17,46 @@ public class ImageSequencePlayer1 : MonoBehaviour
 
     void Start()
     {
-        // 初始化材质与黑屏
+        // initialize materials and black screen
         screenMat = screenRenderer.material;
         blackTex = new Texture2D(1, 1);
         blackTex.SetPixel(0, 0, Color.black);
         blackTex.Apply();
 
-        // 从 Resources 里自动加载图片
+        // load images from Resources
         targets = new List<Texture2D>(Resources.LoadAll<Texture2D>("Stimuli/Targets"));
         nonTargets = new List<Texture2D>(Resources.LoadAll<Texture2D>("Stimuli/NonTargets"));
 
-        // 打乱非目标和目标图片顺序
+        // shuffle the order of non-target and target images
         Shuffle(nonTargets);
         Shuffle(targets);
 
-        // 启动播放
+        // start playing
         StartCoroutine(PlayBlock());
     }
 
     IEnumerator PlayBlock()
     {
-        // 一个 block，5 个 trial
+        // 5 trials in one block
         for (int t = 0; t < 5; t++)
         {
-            // 每个 trial 前的黑屏 2 秒
+            // 2s black screen before each trial
             yield return ShowBlack(2f);
             
-            // 取第 t 张（因为已被随机化）
+            // take the t-th target image (already been randomized).
             Texture2D target = targets[t];
 
-            // 取 9 张非目标图
+            // take 9 non-target images
             List<Texture2D> trialImages = new List<Texture2D>();
             for (int i = 0; i < 9; i++)
                 trialImages.Add(nonTargets[nonTargetIndex++]);
 
-            // 随机插入目标图
+            // randomly insert target image
             int targetPos = Random.Range(0, 10);
             trialImages.Insert(targetPos, target);
             Debug.Log($"Trial {t + 1}: Target = {target.name}, Position = {targetPos + 1}/10");
 
-            // 依次显示 10 张图片
+            // run 10 images
             for (int i = 0; i < trialImages.Count; i++)
             {
                 yield return ShowBlack(0.1f);
@@ -64,11 +64,11 @@ public class ImageSequencePlayer1 : MonoBehaviour
 
                 bool isTarget = (i == targetPos);
 
-                // 记录眼动数据
+                // record eye datas
                 if (eyeRecorder != null)
                     eyeRecorder.LogTrialFrame(t + 1, i + 1, trialImages[i].name, isTarget, targetPos + 1);
 
-                // 如果是 target，就记录时间点
+                // if target, record the time
                 if (isTarget && targetLogger != null)
                     targetLogger.LogTargetEvent(t + 1, trialImages[i].name, targetPos + 1);
 

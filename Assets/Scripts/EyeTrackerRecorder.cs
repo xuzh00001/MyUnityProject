@@ -6,8 +6,8 @@ public class EyeTrackerRecorder : MonoBehaviour
 {
     public bool simulateInEditor = true;
     public string folderPath = @"D:\Unity project\DataLogs";
-    public string eyeDataFile = "EyeDataLog.csv";        // 连续眼动数据
-    public string trialEventFile = "TrialEventLog.csv";   // 每张图片呈现时的事件记录
+    public string eyeDataFile = "EyeDataLog.csv";        // record eye tracking data
+    public string trialEventFile = "TrialEventLog.csv";   // record images data
 
 
     private StreamWriter eyeWriter;
@@ -18,14 +18,13 @@ public class EyeTrackerRecorder : MonoBehaviour
     void Start()
     {
         Directory.CreateDirectory(folderPath);
-        // ===== 创建两个 CSV 文件 =====
+        // create csv files
         string eyePath = Path.Combine(folderPath, eyeDataFile);
         string eventPath = Path.Combine(folderPath, trialEventFile);
 
         eyeWriter = new StreamWriter(eyePath, false);
         eventWriter = new StreamWriter(eventPath, false);
 
-        // ===== 写入表头 =====
         eyeWriter.WriteLine("Time,LeftPupil,RightPupil,AvgPupil,GazeOriginX,GazeOriginY,GazeOriginZ,DirX,DirY,DirZ");
         eventWriter.WriteLine("Time,Trial,ImageIndex,ImageName,IsTarget,TargetPosition");
 
@@ -47,7 +46,7 @@ public class EyeTrackerRecorder : MonoBehaviour
 
         if (Application.isEditor && simulateInEditor)
         {
-            // 模拟模式（无设备）
+            // Analog mode (no device)
             leftPupil = 3.0f + Mathf.Sin(Time.time) * 0.1f;
             rightPupil = 3.0f + Mathf.Cos(Time.time) * 0.1f;
         }
