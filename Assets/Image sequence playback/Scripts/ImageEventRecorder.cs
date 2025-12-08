@@ -15,7 +15,7 @@ public class ImageEventRecorder : MonoBehaviour
         logPath = Path.Combine(folder, fileName);
 
         writer = new StreamWriter(logPath, false);
-        writer.WriteLine("Time,Trial,Frame,ImageName,IsTarget,TargetPos");
+        writer.WriteLine("Time,Category,Index,ImageName");
         writer.Flush();
 
         Debug.Log("ImageData.csv Path: " + logPath);
@@ -32,14 +32,14 @@ public class ImageEventRecorder : MonoBehaviour
         Debug.Log("Image event recording stopped.");
     }
 
-    public void RecordEvent(int trial, int frame, string imageName, bool isTarget, int targetPos)
+    public void RecordEvent(int category, int index, string imageName)
     {
         if (writer == null) return;
         
         float t = Time.realtimeSinceStartup - ImageSequencePlayer.playStartTime;
         string time = t.ToString("F4");
 
-        writer.WriteLine($"{time},{trial},{frame},{imageName},{isTarget},{targetPos}");
+        writer.WriteLine($"{time},{category},{index},{imageName}");
         writer.Flush();
     }
 

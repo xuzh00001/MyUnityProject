@@ -10,16 +10,31 @@ public class ImageSequencePlayer : MonoBehaviour
     public ImageEventRecorder eventRecorder;
     public ContinuousEyeRecorder eyeRecorder;
 
-    public Texture2D[] targetTextures;
-    public Texture2D[] nonTargetTextures;
+    public Texture2D customGrayTexture;
+
+    // public Texture2D[] targetTextures;
+    // public Texture2D[] nonTargetTextures;
+    public Texture2D[] Category0;
+    public Texture2D[] Category1;
+    public Texture2D[] Category2;
+    public Texture2D[] Category3;
+    public Texture2D[] Category4;
+    public Texture2D[] Category5;
+    public Texture2D[] Category6;
+    public Texture2D[] Category7;
+    public Texture2D[] Category8;
+    public Texture2D[] Category9;
 
     private Material screenMat;
     private Texture2D blackTex;
+    private Texture2D grayTex;
     private Texture2D crosshairTex;
 
-    private List<Texture2D> targets;
-    private List<Texture2D> nonTargets;
-    private int nonTargetIndex = 0;
+    // private List<Texture2D> targets;
+    // private List<Texture2D> nonTargets;
+    private List<List<Texture2D>> categories = new List<List<Texture2D>>();
+
+    // private int nonTargetIndex = 0;
 
     private bool hasStarted = false;
     public GameObject playCanvas;
@@ -35,14 +50,25 @@ public class ImageSequencePlayer : MonoBehaviour
         blackTex.SetPixel(0, 0, Color.black);
         blackTex.Apply();
 
+        grayTex = customGrayTexture;
         // generate crosshair texture
         crosshairTex = GenerateCrosshair(256, 256);
 
-        targets = new List<Texture2D>(targetTextures);
-        nonTargets = new List<Texture2D>(nonTargetTextures);
+        // targets = new List<Texture2D>(targetTextures);
+        // nonTargets = new List<Texture2D>(nonTargetTextures);
+        // Shuffle(targets);
+        // Shuffle(nonTargets);
+        categories.Add(new List<Texture2D>(Category0));
+        categories.Add(new List<Texture2D>(Category1));
+        categories.Add(new List<Texture2D>(Category2));
+        categories.Add(new List<Texture2D>(Category3));
+        categories.Add(new List<Texture2D>(Category4));
+        categories.Add(new List<Texture2D>(Category5));
+        categories.Add(new List<Texture2D>(Category6));
+        categories.Add(new List<Texture2D>(Category7));
+        categories.Add(new List<Texture2D>(Category8));
+        categories.Add(new List<Texture2D>(Category9));
 
-        Shuffle(targets);
-        Shuffle(nonTargets);
 
         // StartCoroutine(MainRoutine());
         SetTexture(blackTex);
@@ -53,21 +79,23 @@ public class ImageSequencePlayer : MonoBehaviour
         if (hasStarted) return;
         hasStarted = true;
 
+        Shuffle(categories);
+
+        for (int c = 0; c < categories.Count; c++)
+        {
+            Shuffle(categories[c]);
+        }
+
         // reset image and time
-        nonTargetIndex = 0;
+        // nonTargetIndex = 0;
         playStartTime = Time.realtimeSinceStartup;
 
         // hide Canvas
         if (playCanvas != null)
             playCanvas.SetActive(false);
 
-        // start eye-tracking
-        if (eyeRecorder != null)
-            eyeRecorder.StartRecording();
-
-        // start image-recording
-        if (eventRecorder != null)
-            eventRecorder.StartRecording();
+        eyeRecorder?.StartRecording();
+        eventRecorder?.StartRecording();
 
         StartCoroutine(MainRoutine());
     }
@@ -81,18 +109,26 @@ public class ImageSequencePlayer : MonoBehaviour
     IEnumerator MainRoutine()
     {
         // 10s fixation cross before all blocks
-        SetTexture(blackTex);
+        SetTexture(grayTex);
         ShowCrosshair(true);
         yield return new WaitForSecondsRealtime(10f);
         ShowCrosshair(false);
 
         // Run blocks 1
-        yield return StartCoroutine(RunBlock());
-        Shuffle(targets);
+        // yield return StartCoroutine(RunBlock());
+        // Shuffle(targets);
         // 5s block interval
-        yield return ShowBlack(5f);
+        // yield return ShowBlack(5f);
         // run block 2
-        yield return StartCoroutine(RunBlock());
+        // yield return StartCoroutine(RunBlock());
+
+        for (int c = 0; c < 10; c++)
+        {
+            yield return StartCoroutine(PlayCategory(c));
+
+            if (c < 9)
+                yield return ShowGray(2f);
+        }
 
         // 10s fixation cross after all blocks
         SetTexture(blackTex);
@@ -117,49 +153,26 @@ public class ImageSequencePlayer : MonoBehaviour
     }
 
 
-    IEnumerator RunBlock()
+    IEnumerator PlayCategory(int categoryIndex)
     {
-        // 2s black screen with crosshair
-        SetTexture(blackTex);
-        ShowCrosshair(true);
-        yield return new WaitForSecondsRealtime(2f);
-        ShowCrosshair(false);
+        List<Texture2D> imgs = categories[categoryIndex];
 
-        // 5 trials
-        for (int t = 0; t < 5; t++)
+        for (int i = 0; i < imgs.Count; i++)
         {
-            Texture2D target = targets[t];
+            Texture2D tex = imgs[i];
+            SetTexture(tex);
 
-            List<Texture2D> trialImages = new List<Texture2D>();
-            for (int i = 0; i < 9; i++)
-                trialImages.Add(nonTargets[nonTargetIndex++]);
+            eventRecorder?.RecordEvent(categoryIndex, i + 1, tex.name);
 
-            int targetPos = Random.Range(0, 10);
-            trialImages.Insert(targetPos, target);
-
-            Debug.Log($"Trial {t+1}: Target = {target.name}, Position = {targetPos+1}");
-
-            for (int i = 0; i < 10; i++)
-            {
-                Texture2D img = trialImages[i];
-                SetTexture(img);
-
-                bool isTarget = (i == targetPos);
-
-                eventRecorder?.RecordEvent(
-                    t + 1, i + 1, img.name, isTarget, targetPos + 1
-                );
-
-                yield return new WaitForSecondsRealtime(0.175f);
-                // 0.1s after each image
-                // yield return ShowBlack(0.1f);
-            }
-            
-            // 2s black screen after trial (without crosshair)
-            yield return ShowBlack(2f);
+            yield return new WaitForSecondsRealtime(0.1f); // 100ms
         }
+    }
 
-        Debug.Log("Block finished.");
+
+    IEnumerator ShowGray(float t)
+    {
+        SetTexture(grayTex);
+        yield return new WaitForSecondsRealtime(t);
     }
 
     IEnumerator ShowBlack(float t)
