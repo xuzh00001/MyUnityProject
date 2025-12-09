@@ -953,7 +953,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_SelectActionTrigger: 0
-  m_HideControllerOnSelect: 0
+  m_HideControllerOnSelect: 1
   m_AllowHoveredActivate: 0
   m_TargetPriorityMode: 0
   m_PlayAudioClipOnSelectEntered: 0
@@ -1717,7 +1717,7 @@ MonoBehaviour:
   m_OnDeactivate:
     m_PersistentCalls:
       m_Calls: []
-  m_TeleportationProvider: {fileID: 0}
+  m_TeleportationProvider: {fileID: 1313711685}
   m_MatchOrientation: 2
   m_MatchDirectionalInput: 0
   m_TeleportTrigger: 0
@@ -3265,6 +3265,14 @@ MonoBehaviour:
       m_Groups: 
       m_Action: Action
       m_Flags: 0
+    - m_Name: 
+      m_Id: 3d0651ea-b0e2-4a33-85df-7c9889c4db11
+      m_Path: <VIVEFocus3Controller>{RightHand}/primaryButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Action
+      m_Flags: 0
     m_Flags: 0
   OnPress:
     m_PersistentCalls:
@@ -4463,6 +4471,14 @@ MonoBehaviour:
       m_Groups: 
       m_Action: Action
       m_Flags: 0
+    - m_Name: 
+      m_Id: eb591983-454d-409b-b111-b2d5cf59b6c2
+      m_Path: <VIVEFocus3Controller>/primaryButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Action
+      m_Flags: 0
     m_Flags: 0
   OnPress:
     m_PersistentCalls:
@@ -5198,7 +5214,7 @@ Transform:
   m_GameObject: {fileID: 1313711679}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0.5, y: 1.4, z: 0}
+  m_LocalPosition: {x: 0.5, y: 0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5536,16 +5552,16 @@ MonoBehaviour:
   eyeRecorder: {fileID: 978484213}
   customGrayTexture: {fileID: 2800000, guid: 3a8a8d3e93ccead4fb246a8edc4742de, type: 3}
   Category0:
-  - {fileID: 2800000, guid: 3c1bda4d004b3b5438540fe797246a85, type: 3}
-  - {fileID: 2800000, guid: a3b56f351aaa62241b93e07bad4bef81, type: 3}
-  - {fileID: 2800000, guid: e171bed72eeb0e246829e9e43fc7336a, type: 3}
-  - {fileID: 2800000, guid: 769cdfa937615c744a81336a453f3107, type: 3}
-  - {fileID: 2800000, guid: c570751379da62649aa4be607d0b79f0, type: 3}
-  - {fileID: 2800000, guid: c7119705d756c6544a4b08f4b395e3b9, type: 3}
-  - {fileID: 2800000, guid: 091a88fb9678c9147a8a9708cc624042, type: 3}
-  - {fileID: 2800000, guid: 7e4e39284102c1e40b4df49466e95609, type: 3}
-  - {fileID: 2800000, guid: 0e4b1c524c23f25458a4ca6b437ab515, type: 3}
-  - {fileID: 2800000, guid: 904a8d832f6c8174b96ed79af3f22299, type: 3}
+  - {fileID: 2800000, guid: 05a36f3cdde4fa74d9db529b93ad6902, type: 3}
+  - {fileID: 2800000, guid: 7efd40b01927fbf4c897afa697c24f53, type: 3}
+  - {fileID: 2800000, guid: 0fec19102f06e3c48b53aded50c04c8c, type: 3}
+  - {fileID: 2800000, guid: eca62c92a261e0649a180e08ff57db1f, type: 3}
+  - {fileID: 2800000, guid: e822c81943a75054dbab2584f9d28c1e, type: 3}
+  - {fileID: 2800000, guid: cc2e0f632a3dfd54fae2f383db789935, type: 3}
+  - {fileID: 2800000, guid: 4b2c5da53757d824ba5dd6d7d49126c9, type: 3}
+  - {fileID: 2800000, guid: c9275a217eebf244e87beff358a3b65c, type: 3}
+  - {fileID: 2800000, guid: 1c0748431f6120d468e3766003f8d73e, type: 3}
+  - {fileID: 2800000, guid: 65fe16ea76e35814eac0ea1023655ada, type: 3}
   Category1:
   - {fileID: 2800000, guid: 502aa8bcad56b624fb09c4381806ab48, type: 3}
   - {fileID: 2800000, guid: 5e6700671b371264f84e63832b2b32d6, type: 3}
@@ -5613,16 +5629,16 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 45b626b0c677c714991fb1c8c8040d84, type: 3}
   - {fileID: 2800000, guid: 76d2a10869d4ba64bb115c55c74a4c7f, type: 3}
   Category7:
-  - {fileID: 2800000, guid: d75189158f9b9174ba4ae8411db0c620, type: 3}
-  - {fileID: 2800000, guid: f49464f09e5c79b4aa6191e15c51f20d, type: 3}
-  - {fileID: 2800000, guid: 4dd28a94eb2a0904da33841f6d227c3d, type: 3}
-  - {fileID: 2800000, guid: 1a1cef575260771488b7b029885ec30b, type: 3}
-  - {fileID: 2800000, guid: 2ef74475d3bb63f40916c943f2fe7d20, type: 3}
-  - {fileID: 2800000, guid: e848c0235c1166647aa97b4e19a991ef, type: 3}
-  - {fileID: 2800000, guid: cfb60792f5845c5418ac7023492f006a, type: 3}
-  - {fileID: 2800000, guid: 06c236890f44ef54cafef3ba94e5de83, type: 3}
-  - {fileID: 2800000, guid: 05bae168497f1af4cbf944b50024e69a, type: 3}
-  - {fileID: 2800000, guid: 43d6fd15c5209784385ba45d35943642, type: 3}
+  - {fileID: 2800000, guid: d1f6c17e1f6a4aa498d09bf11e5eb8cf, type: 3}
+  - {fileID: 2800000, guid: 9de699b75e8396d41b1a64a91eabe41e, type: 3}
+  - {fileID: 2800000, guid: 074c1e5bd7be36c4d9e4f230194f96cd, type: 3}
+  - {fileID: 2800000, guid: 0dc3fd0dbc2d77446b2eb9e963a923b8, type: 3}
+  - {fileID: 2800000, guid: ae798691c949cfa4790c6a3e8d5ac8e0, type: 3}
+  - {fileID: 2800000, guid: 2c6d374b6f496d64cb5e090ad9caf233, type: 3}
+  - {fileID: 2800000, guid: 34cec6351a40349408483ed857bc7ebe, type: 3}
+  - {fileID: 2800000, guid: 3906c320e1f4569449c08db2f087204d, type: 3}
+  - {fileID: 2800000, guid: 55c8997b2b6be0e4ba70f4a11a64d498, type: 3}
+  - {fileID: 2800000, guid: 91115099a2097ce408127aef64905210, type: 3}
   Category8:
   - {fileID: 2800000, guid: 8b7cef973deea2b449ffeb57a59b1fe6, type: 3}
   - {fileID: 2800000, guid: 7355ecf42bbb405448829540e535d634, type: 3}
