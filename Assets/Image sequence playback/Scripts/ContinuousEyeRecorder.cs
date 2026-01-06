@@ -2,42 +2,67 @@ using System.IO;
 using UnityEngine;
 using VIVE.OpenXR;
 using VIVE.OpenXR.EyeTracker;
+using System;
+
 
 public class ContinuousEyeRecorder : MonoBehaviour
 {
+    private string participantId;
+
     private StreamWriter writer;
     private bool isRecording = false;
 
-    private string set = "100 ms";   // Set
-
-
-    public enum BlockType
-    {
-        Baseline,
-        Stimulus,
-        Interval
-    }
+    private int speedMs = 100;
+    private int runIndex = 0;
 
     public static int CurrentTrial = -1;
     public static string CurrentCategory = "NA";
     public static int CurrentIndex = -1;
     public static string CurrentImageName = "NA";
     public static BlockType CurrentBlock = BlockType.Baseline;
+    
+    void Awake()
+    {
+        participantId = GenerateParticipantId();
+        Debug.Log($"Participant ID (new session): {participantId}");
+    }
 
+
+    string GenerateParticipantId()
+    {
+        return "P_" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+    }
+    
+    public enum BlockType
+    {
+        Baseline,
+        Stimulus,
+        Interval
+    }
+    
+    public void SetSpeed(int ms)
+    {
+        speedMs = ms;
+    }
 
     public void StartRecording()
     {
         if (writer != null) return;
 
-        string folder = Application.persistentDataPath;
-        int runIndex = GetNextRunIndex(folder);
+        string root = Application.persistentDataPath;
+        string folder = Path.Combine(root, participantId);
+        
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
 
-        string fileName = $"{set}_run-{runIndex:D2}.csv";
+        runIndex = GetNextRunIndex(folder);
+
+        string fileName = $"{participantId}_{speedMs}ms_run-{runIndex:D2}.csv";
         string filePath = Path.Combine(folder, fileName);
 
         writer = new StreamWriter(filePath, false);
         writer.WriteLine(
-            "Time,LeftPupil,RightPupil,Trial,Category,Index,ImageName,Block"
+            "Time,LeftPupil,RightPupil,Block,Trial,Category,Index,ImageID,Speed,ParticipantID"
         );
         writer.Flush();
 
@@ -73,7 +98,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
         string block = CurrentBlock.ToString();
 
         writer.WriteLine(
-            $"{time:F4},{left},{right},{trialStr},{category},{indexStr},{image},{block}"
+            $"{time:F4},{left},{right},{block},{trialStr},{category},{indexStr},{image},{speedMs},{participantId}"
         );
     }
 
@@ -85,20 +110,16 @@ public class ContinuousEyeRecorder : MonoBehaviour
         if (!Directory.Exists(folder))
             return 1;
 
-        var files = Directory.GetFiles(folder, $"{set}_run-*.csv");
+        var files = Directory.GetFiles(folder, $"{participantId}_{speedMs}ms_run-*.csv");
 
         foreach (var file in files)
         {
             string name = Path.GetFileNameWithoutExtension(file);
             int idx = name.LastIndexOf("run-");
-            if (idx >= 0)
+            if (idx >= 0 &&
+                int.TryParse(name.Substring(idx + 4), out int run))
             {
-                string runStr = name.Substring(idx + 4);
-                if (int.TryParse(runStr, out int run))
-                {
-                    if (run > maxRun)
-                        maxRun = run;
-                }
+                maxRun = Mathf.Max(maxRun, run);
             }
         }
 

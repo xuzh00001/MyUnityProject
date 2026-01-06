@@ -1,9 +1,12 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ImageSequencePlayer : MonoBehaviour
 {
     public static float playStartTime = 0f;
+
+    public XRRigLock rigLock;
 
     public Renderer screenRenderer;
     public ContinuousEyeRecorder eyeRecorder;
@@ -16,15 +19,42 @@ public class ImageSequencePlayer : MonoBehaviour
         public string name;
         public Texture2D[] images;
     }
-
+    
     public CategoryBlock[] categoryBlocks;
 
+    private Dictionary<int, CategoryBlock[]> cachedOrders
+        = new Dictionary<int, CategoryBlock[]>();
+
+    // runtime
     private Material screenMat;
     private Texture2D blackTex;
     private Texture2D grayTex;
     private Texture2D crosshairTex;
 
+    private int currentSpeedMs;
+    private float imageInterval;
+
     private bool hasStarted = false;
+
+    CategoryBlock[] CloneAndShuffleBlocks(CategoryBlock[] original)
+    {
+        // clone blocks
+        CategoryBlock[] clone = new CategoryBlock[original.Length];
+        for (int i = 0; i < original.Length; i++)
+        {
+            clone[i] = new CategoryBlock
+            {
+                name = original[i].name,
+                images = (Texture2D[])original[i].images.Clone()
+            };
+
+            Shuffle(clone[i].images);
+        }
+
+        // shuffle block order
+        Shuffle(clone);
+        return clone;
+    }
 
     void Start()
     {
@@ -37,17 +67,31 @@ public class ImageSequencePlayer : MonoBehaviour
         grayTex = customGrayTexture;
         crosshairTex = GenerateCrosshair(256, 256);
 
-        // shuffle category order
-        Shuffle(categoryBlocks);
-
-        // shuffle images
-        foreach (var block in categoryBlocks)
-        {
-            Shuffle(block.images);
-        }
-
         SetTexture(blackTex);
     }
+
+
+    public void StartSequenceWithSpeed(int speedMs)
+    {
+        if (hasStarted) return;
+
+        currentSpeedMs = speedMs;
+        imageInterval = speedMs / 1000f;
+
+        if (!cachedOrders.ContainsKey(speedMs))
+        {
+            cachedOrders[speedMs] = CloneAndShuffleBlocks(categoryBlocks);
+            Debug.Log($"Created new order for {speedMs}ms");
+        }
+
+        categoryBlocks = cachedOrders[speedMs];
+
+        eyeRecorder.SetSpeed(speedMs);
+
+        playCanvas.SetActive(false);
+        StartSequence();
+    }
+
 
     public void StartSequence()
     {
@@ -55,49 +99,48 @@ public class ImageSequencePlayer : MonoBehaviour
         hasStarted = true;
 
         playStartTime = Time.realtimeSinceStartup;
-
-        playCanvas?.SetActive(false);
         eyeRecorder.StartRecording();
+
+        rigLock.LockRig();
 
         StartCoroutine(MainRoutine());
     }
 
     IEnumerator MainRoutine()
     {
-        // Baseline
+        // baseline
         SetBlock(ContinuousEyeRecorder.BlockType.Baseline);
-        SetTexture(grayTex);
+        // SetTexture(grayTex);
         ShowCrosshair(true);
         yield return new WaitForSecondsRealtime(10f);
         ShowCrosshair(false);
 
-        // Trials
+        // trials
         for (int trial = 0; trial < categoryBlocks.Length; trial++)
         {
             yield return StartCoroutine(PlayTrial(trial + 1));
-
             if (trial < categoryBlocks.Length - 1)
                 yield return StartCoroutine(ShowInterval(2f));
         }
 
-        // End
-        SetBlock(ContinuousEyeRecorder.BlockType.Baseline);
-        SetTexture(blackTex);
-        ShowCrosshair(true);
-        yield return new WaitForSecondsRealtime(10f);
-        ShowCrosshair(false);
-        SetTexture(blackTex);
+        // end interval
+        SetBlock(ContinuousEyeRecorder.BlockType.Interval);
+        SetTexture(grayTex);
+        yield return new WaitForSecondsRealtime(5f);
 
-        yield return new WaitForSecondsRealtime(2f);
+        SetTexture(blackTex); 
+        yield return new WaitForSecondsRealtime(1f);
 
         eyeRecorder.StopRecording();
         hasStarted = false;
-        playCanvas?.SetActive(true);
+        playCanvas.SetActive(true);
+        
+        rigLock.UnlockRig();
     }
 
     IEnumerator PlayTrial(int trialNumber)
     {
-        CategoryBlock block = categoryBlocks[trialNumber - 1];
+        var block = categoryBlocks[trialNumber - 1];
 
         ContinuousEyeRecorder.CurrentBlock = ContinuousEyeRecorder.BlockType.Stimulus;
         ContinuousEyeRecorder.CurrentTrial = trialNumber;
@@ -106,11 +149,10 @@ public class ImageSequencePlayer : MonoBehaviour
         for (int i = 0; i < block.images.Length; i++)
         {
             SetTexture(block.images[i]);
-
             ContinuousEyeRecorder.CurrentIndex = i + 1;
             ContinuousEyeRecorder.CurrentImageName = block.images[i].name;
 
-            yield return new WaitForSecondsRealtime(0.1f);  // 100 ms
+            yield return new WaitForSecondsRealtime(imageInterval);
         }
 
         ClearStimulusState();
@@ -122,7 +164,6 @@ public class ImageSequencePlayer : MonoBehaviour
         SetTexture(grayTex);
         yield return new WaitForSecondsRealtime(t);
     }
-
 
     void SetBlock(ContinuousEyeRecorder.BlockType block)
     {
@@ -137,7 +178,6 @@ public class ImageSequencePlayer : MonoBehaviour
         ContinuousEyeRecorder.CurrentIndex = -1;
         ContinuousEyeRecorder.CurrentImageName = "NA";
     }
-
 
     void SetTexture(Texture tex)
     {
