@@ -9,6 +9,8 @@ public class ContinuousEyeRecorder : MonoBehaviour
 {
     private string participantId;
 
+    public string ParticipantId => participantId;
+
     private StreamWriter writer;
     private bool isRecording = false;
 

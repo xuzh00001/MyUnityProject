@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class ImageSequencePlayer : MonoBehaviour
 {
     public static float playStartTime = 0f;
 
     public XRRigLock rigLock;
+    public TextMeshProUGUI participantIdText;
 
     public Renderer screenRenderer;
     public ContinuousEyeRecorder eyeRecorder;
@@ -67,6 +69,11 @@ public class ImageSequencePlayer : MonoBehaviour
         grayTex = customGrayTexture;
         crosshairTex = GenerateCrosshair(256, 256);
 
+        if (participantIdText != null && eyeRecorder != null)
+        {
+            participantIdText.text = $"Participant: {eyeRecorder.ParticipantId}";
+        }
+
         SetTexture(blackTex);
     }
 
@@ -102,6 +109,7 @@ public class ImageSequencePlayer : MonoBehaviour
         eyeRecorder.StartRecording();
 
         rigLock.LockRig();
+        participantIdText.gameObject.SetActive(false);
 
         StartCoroutine(MainRoutine());
     }
@@ -136,6 +144,7 @@ public class ImageSequencePlayer : MonoBehaviour
         playCanvas.SetActive(true);
         
         rigLock.UnlockRig();
+        participantIdText.gameObject.SetActive(true);
     }
 
     IEnumerator PlayTrial(int trialNumber)
