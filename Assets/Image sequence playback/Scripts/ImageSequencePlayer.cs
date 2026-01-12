@@ -8,6 +8,7 @@ public class ImageSequencePlayer : MonoBehaviour
     public static float playStartTime = 0f;
 
     public XRRigLock rigLock;
+    public RoomLockToCamera roomLockToCamera;
     public TextMeshProUGUI participantIdText;
 
     public Renderer screenRenderer;
@@ -109,6 +110,7 @@ public class ImageSequencePlayer : MonoBehaviour
         eyeRecorder.StartRecording();
 
         rigLock.LockRig();
+        roomLockToCamera.LockRoomToCamera();
         participantIdText.gameObject.SetActive(false);
 
         StartCoroutine(MainRoutine());
@@ -118,7 +120,6 @@ public class ImageSequencePlayer : MonoBehaviour
     {
         // baseline
         SetBlock(ContinuousEyeRecorder.BlockType.Baseline);
-        // SetTexture(grayTex);
         ShowCrosshair(true);
         yield return new WaitForSecondsRealtime(10f);
         ShowCrosshair(false);
@@ -144,6 +145,7 @@ public class ImageSequencePlayer : MonoBehaviour
         playCanvas.SetActive(true);
         
         rigLock.UnlockRig();
+        roomLockToCamera.UnlockRoom();
         participantIdText.gameObject.SetActive(true);
     }
 

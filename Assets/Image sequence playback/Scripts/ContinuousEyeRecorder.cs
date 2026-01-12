@@ -22,6 +22,11 @@ public class ContinuousEyeRecorder : MonoBehaviour
     public static int CurrentIndex = -1;
     public static string CurrentImageName = "NA";
     public static BlockType CurrentBlock = BlockType.Baseline;
+
+    // Blink
+    private bool leftBlinkMask  = false;
+    private bool rightBlinkMask = false;
+
     
     void Awake()
     {
@@ -83,7 +88,6 @@ public class ContinuousEyeRecorder : MonoBehaviour
         Debug.Log("Recording stopped.");
     }
 
-
     void Update()
     {
         if (!isRecording || writer == null) return;
@@ -128,11 +132,46 @@ public class ContinuousEyeRecorder : MonoBehaviour
         return maxRun + 1;
     }
 
-    // Eye tracking
+    // Blink frame mask based on eyeOpenness only (with hysteresis < 0.15 to > 0.5)
+    private bool IsBlinkFrame(
+        XrEyePositionHTC eye,
+        ref bool blinkMask
+    )
+    {
+    #if UNITY_ANDROID && !UNITY_EDITOR
+        XrSingleEyeGeometricDataHTC[] geometrics = null;
+        XR_HTC_eye_tracker.Interop.GetEyeGeometricData(out geometrics);
 
+        if (geometrics == null || geometrics.Length < 2)
+            return blinkMask;
+
+        var g = geometrics[(int)eye];
+        if (!g.isValid)
+            return blinkMask;
+
+        // Enter blink
+        if (!blinkMask && g.eyeOpenness < 0.15f)
+        {
+            blinkMask = true;
+        }
+        // Exit blink
+        else if (blinkMask && g.eyeOpenness > 0.5f)
+        {
+            blinkMask = false;
+        }
+
+        return blinkMask;
+    #else
+        return false;
+    #endif
+    }
+
+
+
+    // Eye tracking
     private void GetPupilData(out float left, out float right)
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
+    #if UNITY_ANDROID && !UNITY_EDITOR
         XrSingleEyePupilDataHTC[] pupils = null;
         XR_HTC_eye_tracker.Interop.GetEyePupilData(out pupils);
 
@@ -143,14 +182,33 @@ public class ContinuousEyeRecorder : MonoBehaviour
             var L = pupils[(int)XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC];
             var R = pupils[(int)XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC];
 
-            if (L.isDiameterValid) left = L.pupilDiameter;
-            if (R.isDiameterValid) right = R.pupilDiameter;
+            bool leftBlink =
+                IsBlinkFrame(
+                    XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC,
+                    ref leftBlinkMask
+                );
+
+            bool rightBlink =
+                IsBlinkFrame(
+                    XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC,
+                    ref rightBlinkMask
+                );
+
+            if (!leftBlink && L.isDiameterValid)
+                left = L.pupilDiameter;
+            else
+                left = -1f;
+
+            if (!rightBlink && R.isDiameterValid)
+                right = R.pupilDiameter;
+            else
+                right = -1f;
         }
-#else
+    #else
         // Editor mock data
         left = 3.0f;
         right = 3.0f;
-#endif
+    #endif
     }
 
     void OnDestroy()
