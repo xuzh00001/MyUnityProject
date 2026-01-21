@@ -37,6 +37,7 @@ public class ImageSequencePlayer : MonoBehaviour
     private int currentSpeedMs;
     private float imageInterval;
 
+    private int selectedSpeedMs = -1;
     private bool hasStarted = false;
 
     CategoryBlock[] CloneAndShuffleBlocks(CategoryBlock[] original)
@@ -79,6 +80,27 @@ public class ImageSequencePlayer : MonoBehaviour
     }
 
 
+    public void SelectSpeed(int speedMs)
+    {
+        selectedSpeedMs = speedMs;
+        Debug.Log($"Speed selected: {speedMs} ms");
+    }
+
+
+    public void StartTest()
+    {
+        if (hasStarted) return;
+
+        if (selectedSpeedMs < 0)
+        {
+            Debug.LogWarning("No speed selected!");
+            return;
+        }
+
+        StartSequenceWithSpeed(selectedSpeedMs);
+    }
+
+
     public void StartSequenceWithSpeed(int speedMs)
     {
         if (hasStarted) return;
@@ -109,8 +131,8 @@ public class ImageSequencePlayer : MonoBehaviour
         playStartTime = Time.realtimeSinceStartup;
         eyeRecorder.StartRecording();
 
-        rigLock.LockRig();
-        roomLockToCamera.LockRoomToCamera();
+        // rigLock.LockRig();
+        // roomLockToCamera.LockRoomToCamera();
         participantIdText.gameObject.SetActive(false);
 
         StartCoroutine(MainRoutine());
@@ -118,10 +140,14 @@ public class ImageSequencePlayer : MonoBehaviour
 
     IEnumerator MainRoutine()
     {
-        // baseline
+        // baseline 10s in total
         SetBlock(ContinuousEyeRecorder.BlockType.Baseline);
         ShowCrosshair(true);
-        yield return new WaitForSecondsRealtime(10f);
+        // Lock after 3s
+        yield return new WaitForSecondsRealtime(3f);
+        rigLock.LockRig();
+        roomLockToCamera.LockRoomToCamera();
+        yield return new WaitForSecondsRealtime(7f);
         ShowCrosshair(false);
 
         // trials
@@ -147,6 +173,10 @@ public class ImageSequencePlayer : MonoBehaviour
         rigLock.UnlockRig();
         roomLockToCamera.UnlockRoom();
         participantIdText.gameObject.SetActive(true);
+        foreach (var btn in FindObjectsOfType<SpeedButtonUI>())
+        {
+            btn.UpdateCount();
+        }
     }
 
     IEnumerator PlayTrial(int trialNumber)
