@@ -6,10 +6,11 @@ using TMPro;
 public class ImageSequencePlayer : MonoBehaviour
 {
     public static float playStartTime = 0f;
+    
+    public System.Action OnSequenceFinished;
 
     public XRRigLock rigLock;
     public RoomLockToCamera roomLockToCamera;
-    public TextMeshProUGUI participantIdText;
 
     public Renderer screenRenderer;
     public ContinuousEyeRecorder eyeRecorder;
@@ -71,11 +72,6 @@ public class ImageSequencePlayer : MonoBehaviour
         grayTex = customGrayTexture;
         crosshairTex = GenerateCrosshair(256, 256);
 
-        if (participantIdText != null && eyeRecorder != null)
-        {
-            participantIdText.text = $"Participant: {eyeRecorder.ParticipantId}";
-        }
-
         SetTexture(blackTex);
     }
 
@@ -133,7 +129,6 @@ public class ImageSequencePlayer : MonoBehaviour
 
         // rigLock.LockRig();
         // roomLockToCamera.LockRoomToCamera();
-        participantIdText.gameObject.SetActive(false);
 
         StartCoroutine(MainRoutine());
     }
@@ -168,15 +163,15 @@ public class ImageSequencePlayer : MonoBehaviour
 
         eyeRecorder.StopRecording();
         hasStarted = false;
-        playCanvas.SetActive(true);
+
+        if (playCanvas != null)
+            playCanvas.SetActive(true);
         
         rigLock.UnlockRig();
         roomLockToCamera.UnlockRoom();
-        participantIdText.gameObject.SetActive(true);
-        foreach (var btn in FindObjectsOfType<SpeedButtonUI>())
-        {
-            btn.UpdateCount();
-        }
+
+        OnSequenceFinished?.Invoke();
+
     }
 
     IEnumerator PlayTrial(int trialNumber)
