@@ -3,7 +3,7 @@ using UnityEngine;
 using VIVE.OpenXR;
 using VIVE.OpenXR.EyeTracker;
 using System;
- 
+
 public class ContinuousEyeRecorder : MonoBehaviour
 {
     private string participantId;
@@ -66,7 +66,10 @@ public class ContinuousEyeRecorder : MonoBehaviour
  
         writer = new StreamWriter(filePath, false);
         writer.WriteLine(
-            "Time,LeftPupil,RightPupil,Block,Trial,Category,Index,ImageID,Speed,ParticipantID"
+            "Time," +
+            "LeftPupilRaw,RightPupilRaw," +
+            "LeftPupilBlink,RightPupilBlink," +
+            "Block,Trial,Category,Index,ImageID,Speed,ParticipantID"
         );
         writer.Flush();
  
@@ -88,8 +91,15 @@ public class ContinuousEyeRecorder : MonoBehaviour
     {
         if (!isRecording || writer == null) return;
  
-        float left, right;
-        GetPupilData(out left, out right);
+        float leftRaw, rightRaw;
+        float leftBlink, rightBlink;
+
+        GetPupilData(
+            out leftRaw,
+            out rightRaw,
+            out leftBlink,
+            out rightBlink
+        );
  
         float time = Time.realtimeSinceStartup - ImageSequencePlayer.playStartTime;
  
@@ -100,7 +110,10 @@ public class ContinuousEyeRecorder : MonoBehaviour
         string block = CurrentBlock.ToString();
  
         writer.WriteLine(
-            $"{time:F4},{left},{right},{block},{trialStr},{category},{indexStr},{image},{speedMs},{participantId}"
+            $"{time:F4}," +
+            $"{leftRaw},{rightRaw}," +
+            $"{leftBlink},{rightBlink}," +
+            $"{block},{trialStr},{category},{indexStr},{image},{speedMs},{participantId}"
         );
     }
  
@@ -172,47 +185,50 @@ public class ContinuousEyeRecorder : MonoBehaviour
     }
  
     // Eye tracking data
-    private void GetPupilData(out float left, out float right)
+    private void GetPupilData(out float leftRaw, out float rightRaw, out float leftBlinkAware, out float rightBlinkAware)
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         XrSingleEyePupilDataHTC[] pupils = null;
         XR_HTC_eye_tracker.Interop.GetEyePupilData(out pupils);
  
-        left = right = -1f;
+        leftRaw = rightRaw = -1f;
+        leftBlinkAware = rightBlinkAware = -1f;
  
         if (pupils != null && pupils.Length >= 2)
         {
             var L = pupils[(int)XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC];
             var R = pupils[(int)XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC];
  
-            bool leftBlink =
-                IsBlinkFrame(
-                    XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC,
-                    ref leftBlinkMask,
-                    L
-                );
- 
-            bool rightBlink =
-                IsBlinkFrame(
-                    XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC,
-                    ref rightBlinkMask,
-                    R
-                );
- 
+            // Raw pupil (no blink filtering)
+            if (L.isDiameterValid)
+                leftRaw = L.pupilDiameter;
+
+            if (R.isDiameterValid)
+                rightRaw = R.pupilDiameter;
+
+            // Blink-aware pupil
+            bool leftBlink = IsBlinkFrame(
+                XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC,
+                ref leftBlinkMask,
+                L
+            );
+
+            bool rightBlink = IsBlinkFrame(
+                XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC,
+                ref rightBlinkMask,
+                R
+            );
+
             if (!leftBlink && L.isDiameterValid)
-                left = L.pupilDiameter;
-            else
-                left = -1f;
- 
+                leftBlinkAware = L.pupilDiameter;
+
             if (!rightBlink && R.isDiameterValid)
-                right = R.pupilDiameter;
-            else
-                right = -1f;
+                rightBlinkAware = R.pupilDiameter;
         }
 #else
-        // Editor mock data
-        left = 3.0f;
-        right = 3.0f;
+        // Editor mock
+        leftRaw = rightRaw = 3.0f;
+        leftBlinkAware = rightBlinkAware = 3.0f;
 #endif
     }
  

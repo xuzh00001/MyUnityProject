@@ -6,7 +6,7 @@ public class StudyFlowController : MonoBehaviour
     [System.Serializable]
     public class SessionConfig
     {
-        public string sessionName;                 // A / B / C
+        public string sessionName;                 // A / B / C / D
 
         public GameObject pageReady;
         public GameObject pageProgress;
@@ -44,7 +44,7 @@ public class StudyFlowController : MonoBehaviour
     }
 
 
-    // Welcome to Session 0 Ready
+    // Welcome to Session A Ready
     public void OnClickBegin()
     {
         participantIdHeader.gameObject.SetActive(true);
@@ -111,8 +111,8 @@ public class StudyFlowController : MonoBehaviour
             // Session finished
             if (currentSessionIndex == sessions.Length - 1)
             {
-                // Session（C）
-                participantIdHeader.gameObject.SetActive(false);
+                // Session C
+                participantIdHeader.gameObject.SetActive(true);
                 ShowOnly(pageFinalComplete);
             }
             else
@@ -128,10 +128,12 @@ public class StudyFlowController : MonoBehaviour
 
     public void OnClickFinish()
     {
+        RefreshParticipantId();
+        participantIdHeader.gameObject.SetActive(true);
         ShowOnly(pageThanks);
     }
 
-    // Helpers
+    // Helper functions
 
     private void RefreshParticipantId()
     {
