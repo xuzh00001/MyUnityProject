@@ -2791,7 +2791,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f137a26509b739645b07c35daf269105, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 89061e2fb7f9eba419d8ea40e8950b7c, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8132,7 +8132,7 @@ MonoBehaviour:
   - name: Landmarks
     images:
     - {fileID: 2800000, guid: 048da1014d54c5948a160f4cec9b878a, type: 3}
-    - {fileID: 2800000, guid: 76cd7e8be81585145908608534c8510f, type: 3}
+    - {fileID: 2800000, guid: 62cb4fe5010ff384a87267a141b2f7d7, type: 3}
     - {fileID: 2800000, guid: 1988ee8177060e1498b7ec880409ceb9, type: 3}
     - {fileID: 2800000, guid: 0d2a782f8b299824cafb2317ba9d0007, type: 3}
     - {fileID: 2800000, guid: fdf60526f9ec12c48832fc86efc8994e, type: 3}
@@ -8239,29 +8239,29 @@ MonoBehaviour:
     pageProgress: {fileID: 1406065732}
     pageEnd: {fileID: 1088590128}
     progressText: {fileID: 1888537933}
-    speedMs: 10
-    targetRuns: 2
+    speedMs: 50
+    targetRuns: 6
   - sessionName: B
     pageReady: {fileID: 2133344241}
     pageProgress: {fileID: 1856474439}
     pageEnd: {fileID: 1034958696}
     progressText: {fileID: 1134513054}
-    speedMs: 10
-    targetRuns: 2
+    speedMs: 100
+    targetRuns: 6
   - sessionName: C
     pageReady: {fileID: 2010960764}
     pageProgress: {fileID: 237059195}
     pageEnd: {fileID: 1993927955}
     progressText: {fileID: 1880751074}
-    speedMs: 10
-    targetRuns: 2
+    speedMs: 150
+    targetRuns: 6
   - sessionName: D
     pageReady: {fileID: 413807339}
     pageProgress: {fileID: 1981348175}
     pageEnd: {fileID: 0}
     progressText: {fileID: 193143343}
-    speedMs: 10
-    targetRuns: 2
+    speedMs: 200
+    targetRuns: 6
 --- !u!1 &1406065732
 GameObject:
   m_ObjectHideFlags: 0

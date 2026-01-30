@@ -156,10 +156,10 @@ public class ImageSequencePlayer : MonoBehaviour
         // end interval
         SetBlock(ContinuousEyeRecorder.BlockType.Interval);
         SetTexture(grayTex);
-        yield return new WaitForSecondsRealtime(5f);
+        yield return new WaitForSecondsRealtime(3f);
 
-        SetTexture(blackTex); 
-        yield return new WaitForSecondsRealtime(1f);
+        // SetTexture(blackTex); 
+        // yield return new WaitForSecondsRealtime(1f);
 
         eyeRecorder.StopRecording();
         hasStarted = false;

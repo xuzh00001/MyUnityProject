@@ -6,6 +6,8 @@ using System;
 
 public class ContinuousEyeRecorder : MonoBehaviour
 {
+    [SerializeField] private int targetFrameRate = 90;
+    
     private string participantId;
     public string ParticipantId => participantId;
     public int CurrentRunIndex => runIndex;
@@ -28,6 +30,10 @@ public class ContinuousEyeRecorder : MonoBehaviour
  
     void Awake()
     {
+        // Frame rate control
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = targetFrameRate; // target Update rate
+        
         participantId = GenerateParticipantId();
         Debug.Log($"Participant ID (new session): {participantId}");
     }
@@ -69,6 +75,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
             "Time," +
             "LeftPupilRaw,RightPupilRaw," +
             "LeftPupilBlink,RightPupilBlink," +
+            "LeftIsBlink,RightIsBlink," +   // add
             "Block,Trial,Category,Index,ImageID,Speed,ParticipantID"
         );
         writer.Flush();
@@ -92,13 +99,16 @@ public class ContinuousEyeRecorder : MonoBehaviour
         if (!isRecording || writer == null) return;
  
         float leftRaw, rightRaw;
-        float leftBlink, rightBlink;
+        float leftBlinkAware, rightBlinkAware;
+        int leftIsBlink, rightIsBlink;
 
         GetPupilData(
-            out leftRaw,
-            out rightRaw,
-            out leftBlink,
-            out rightBlink
+        out leftRaw,
+        out rightRaw,
+        out leftBlinkAware,
+        out rightBlinkAware,
+        out leftIsBlink,    // add
+        out rightIsBlink    // add
         );
  
         float time = Time.realtimeSinceStartup - ImageSequencePlayer.playStartTime;
@@ -112,7 +122,8 @@ public class ContinuousEyeRecorder : MonoBehaviour
         writer.WriteLine(
             $"{time:F4}," +
             $"{leftRaw},{rightRaw}," +
-            $"{leftBlink},{rightBlink}," +
+            $"{leftBlinkAware},{rightBlinkAware}," +
+            $"{leftIsBlink},{rightIsBlink}," +  // add
             $"{block},{trialStr},{category},{indexStr},{image},{speedMs},{participantId}"
         );
     }
@@ -171,11 +182,11 @@ public class ContinuousEyeRecorder : MonoBehaviour
         var g = geometrics[(int)eye];
         if (!g.isValid)
             return blinkMask;
- 
+
         bool isBlink =
-            !pupil.isDiameterValid
-            || g.eyeOpenness < 0.15f
-            || g.eyeSqueeze > 0.8f;
+            g.eyeOpenness < 0.2f &&
+            g.eyeSqueeze  < 0.6f;  // change
+
  
         blinkMask = isBlink;
         return blinkMask;
@@ -184,8 +195,9 @@ public class ContinuousEyeRecorder : MonoBehaviour
 #endif
     }
  
-    // Eye tracking data
-    private void GetPupilData(out float leftRaw, out float rightRaw, out float leftBlinkAware, out float rightBlinkAware)
+    // Eye tracking data (add isBlink)
+    private void GetPupilData(out float leftRaw, out float rightRaw, out float leftBlinkAware, out float rightBlinkAware, out int leftIsBlink,
+    out int rightIsBlink)
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         XrSingleEyePupilDataHTC[] pupils = null;
@@ -193,6 +205,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
  
         leftRaw = rightRaw = -1f;
         leftBlinkAware = rightBlinkAware = -1f;
+        leftIsBlink = rightIsBlink = 0;
  
         if (pupils != null && pupils.Length >= 2)
         {
@@ -218,17 +231,28 @@ public class ContinuousEyeRecorder : MonoBehaviour
                 ref rightBlinkMask,
                 R
             );
+            
+            // Blink flag (1/0)
+            leftIsBlink  = leftBlink  ? 1 : 0;
+            rightIsBlink = rightBlink ? 1 : 0;
+
 
             if (!leftBlink && L.isDiameterValid)
                 leftBlinkAware = L.pupilDiameter;
+            else
+                leftBlinkAware = -1f;
+
 
             if (!rightBlink && R.isDiameterValid)
                 rightBlinkAware = R.pupilDiameter;
+            else
+                rightBlinkAware = -1f;
         }
 #else
         // Editor mock
         leftRaw = rightRaw = 3.0f;
         leftBlinkAware = rightBlinkAware = 3.0f;
+        leftIsBlink = rightIsBlink = 0;
 #endif
     }
  
