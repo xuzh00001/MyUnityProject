@@ -6,7 +6,7 @@ using System;
 
 public class ContinuousEyeRecorder : MonoBehaviour
 {
-    [SerializeField] private int targetFrameRate = 90;
+    [SerializeField] private int targetFrameRate = 120;
     
     private string participantId;
     public string ParticipantId => participantId;
@@ -75,7 +75,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
             "Time," +
             "LeftPupilRaw,RightPupilRaw," +
             "LeftPupilBlink,RightPupilBlink," +
-            "LeftIsBlink,RightIsBlink," +   // add
+            "LeftIsBlink,RightIsBlink," +
             "Block,Trial,Category,Index,ImageID,Speed,ParticipantID"
         );
         writer.Flush();
@@ -107,8 +107,8 @@ public class ContinuousEyeRecorder : MonoBehaviour
         out rightRaw,
         out leftBlinkAware,
         out rightBlinkAware,
-        out leftIsBlink,    // add
-        out rightIsBlink    // add
+        out leftIsBlink,
+        out rightIsBlink
         );
  
         float time = Time.realtimeSinceStartup - ImageSequencePlayer.playStartTime;
@@ -123,7 +123,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
             $"{time:F4}," +
             $"{leftRaw},{rightRaw}," +
             $"{leftBlinkAware},{rightBlinkAware}," +
-            $"{leftIsBlink},{rightIsBlink}," +  // add
+            $"{leftIsBlink},{rightIsBlink}," +
             $"{block},{trialStr},{category},{indexStr},{image},{speedMs},{participantId}"
         );
     }
@@ -185,7 +185,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
 
         bool isBlink =
             g.eyeOpenness < 0.2f &&
-            g.eyeSqueeze  < 0.6f;  // change
+            g.eyeSqueeze  < 0.6f;
 
  
         blinkMask = isBlink;
@@ -195,7 +195,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
 #endif
     }
  
-    // Eye tracking data (add isBlink)
+    // Eye tracking data
     private void GetPupilData(out float leftRaw, out float rightRaw, out float leftBlinkAware, out float rightBlinkAware, out int leftIsBlink,
     out int rightIsBlink)
     {
@@ -232,7 +232,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
                 R
             );
             
-            // Blink flag (1/0)
+            // IsBlink (1/0)
             leftIsBlink  = leftBlink  ? 1 : 0;
             rightIsBlink = rightBlink ? 1 : 0;
 
