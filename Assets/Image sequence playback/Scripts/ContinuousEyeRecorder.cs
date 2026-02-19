@@ -3,11 +3,13 @@ using UnityEngine;
 using VIVE.OpenXR;
 using VIVE.OpenXR.EyeTracker;
 using System;
-
+using System.Threading;
+using System.Collections.Concurrent;
+ 
 public class ContinuousEyeRecorder : MonoBehaviour
 {
     [SerializeField] private int targetFrameRate = 120;
-    
+ 
     private string participantId;
     public string ParticipantId => participantId;
     public int CurrentRunIndex => runIndex;
@@ -18,22 +20,27 @@ public class ContinuousEyeRecorder : MonoBehaviour
     private int speedMs = 100;
     private int runIndex = 0;
  
+    private int frameCounter = 0;
+    private float recordStartTime = 0f;
+ 
+    // use two Threads (one for sampling, one for writing)
+    private Thread samplerThread;
+    private Thread writerThread;
+    private readonly ConcurrentQueue<string> writeQueue = new ConcurrentQueue<string>();
+ 
     public static int CurrentTrial = -1;
     public static string CurrentCategory = "NA";
     public static int CurrentIndex = -1;
     public static string CurrentImageName = "NA";
     public static BlockType CurrentBlock = BlockType.Baseline;
  
-    // Blink mask (per eye)
-    private bool leftBlinkMask  = false;
+    private bool leftBlinkMask = false;
     private bool rightBlinkMask = false;
  
     void Awake()
     {
-        // Frame rate control
         QualitySettings.vSyncCount = 0;
-        Application.targetFrameRate = targetFrameRate; // target Update rate
-        
+        Application.targetFrameRate = targetFrameRate;
         participantId = GenerateParticipantId();
         Debug.Log($"Participant ID (new session): {participantId}");
     }
@@ -57,7 +64,7 @@ public class ContinuousEyeRecorder : MonoBehaviour
  
     public void StartRecording()
     {
-        if (writer != null) return;
+        if (isRecording) return;
  
         string root = Application.persistentDataPath;
         string folder = Path.Combine(root, participantId);
@@ -80,53 +87,104 @@ public class ContinuousEyeRecorder : MonoBehaviour
         );
         writer.Flush();
  
+        frameCounter = 0;
+        recordStartTime = Time.realtimeSinceStartup;
+ 
         isRecording = true;
-        Debug.Log($"Recording started: {fileName}");
+ 
+        // start sampler Thread
+        samplerThread = new Thread(SamplerLoop);
+        samplerThread.IsBackground = true;
+        samplerThread.Start();
+ 
+        // start writer Thread
+        writerThread = new Thread(WriterLoop);
+        writerThread.IsBackground = true;
+        writerThread.Start();
+
     }
  
     public void StopRecording()
     {
         isRecording = false;
+ 
+        samplerThread?.Join();
+        writerThread?.Join();
+ 
         writer?.Flush();
         writer?.Close();
         writer = null;
+
+        writeQueue.Clear(); 
+ 
+        float duration = Time.realtimeSinceStartup - recordStartTime;
+        float fps = frameCounter / duration;
  
         Debug.Log("Recording stopped.");
+        Debug.Log($"Total samples: {frameCounter}");
+        Debug.Log($"Duration: {duration:F2}s");
+        Debug.Log($"Effective Rate: {fps:F2} Hz");
     }
  
-    void Update()
+    // Sampling thread
+    private void SamplerLoop()
     {
-        if (!isRecording || writer == null) return;
+        while (isRecording)
+        {
+            float leftRaw, rightRaw;
+            float leftBlinkAware, rightBlinkAware;
+            int leftIsBlink, rightIsBlink;
  
-        float leftRaw, rightRaw;
-        float leftBlinkAware, rightBlinkAware;
-        int leftIsBlink, rightIsBlink;
-
-        GetPupilData(
-        out leftRaw,
-        out rightRaw,
-        out leftBlinkAware,
-        out rightBlinkAware,
-        out leftIsBlink,
-        out rightIsBlink
-        );
+            GetPupilData(
+                out leftRaw,
+                out rightRaw,
+                out leftBlinkAware,
+                out rightBlinkAware,
+                out leftIsBlink,
+                out rightIsBlink
+            );
  
-        float time = Time.realtimeSinceStartup - ImageSequencePlayer.playStartTime;
+            float time = Time.realtimeSinceStartup - recordStartTime;
  
-        string trialStr = CurrentTrial > 0 ? CurrentTrial.ToString() : "NA";
-        string indexStr = CurrentIndex > 0 ? CurrentIndex.ToString() : "NA";
-        string category = string.IsNullOrEmpty(CurrentCategory) ? "NA" : CurrentCategory;
-        string image = string.IsNullOrEmpty(CurrentImageName) ? "NA" : CurrentImageName;
-        string block = CurrentBlock.ToString();
+            string trialStr = CurrentTrial > 0 ? CurrentTrial.ToString() : "NA";
+            string indexStr = CurrentIndex > 0 ? CurrentIndex.ToString() : "NA";
+            string category = string.IsNullOrEmpty(CurrentCategory) ? "NA" : CurrentCategory;
+            string image = string.IsNullOrEmpty(CurrentImageName) ? "NA" : CurrentImageName;
+            string block = CurrentBlock.ToString();
  
-        writer.WriteLine(
-            $"{time:F4}," +
-            $"{leftRaw},{rightRaw}," +
-            $"{leftBlinkAware},{rightBlinkAware}," +
-            $"{leftIsBlink},{rightIsBlink}," +
-            $"{block},{trialStr},{category},{indexStr},{image},{speedMs},{participantId}"
-        );
+            string line =
+                $"{time:F4}," +
+                $"{leftRaw},{rightRaw}," +
+                $"{leftBlinkAware},{rightBlinkAware}," +
+                $"{leftIsBlink},{rightIsBlink}," +
+                $"{block},{trialStr},{category},{indexStr},{image},{speedMs},{participantId}";
+ 
+            writeQueue.Enqueue(line);
+            Interlocked.Increment(ref frameCounter);
+ 
+            // Samples are taken every 4ms (250Hz polling).
+            Thread.Sleep(4);
+        }
     }
+ 
+    // Write thread
+    private void WriterLoop()
+    {
+        while (isRecording || !writeQueue.IsEmpty)
+        {
+            if (writeQueue.TryDequeue(out string line))
+            {
+                writer.WriteLine(line);
+            }
+            else
+            {
+                Thread.Sleep(1);
+            }
+        }
+    }
+ 
+    // No longer using Update
+    void Update() { }
  
     int GetNextRunIndex(string folder)
     {
@@ -150,22 +208,8 @@ public class ContinuousEyeRecorder : MonoBehaviour
  
         return maxRun + 1;
     }
-    
-
-    public int GetRunCountForSpeed(int speedMs)
-    {
-        string root = Application.persistentDataPath;
-        string folder = Path.Combine(root, participantId);
-
-        if (!Directory.Exists(folder))
-            return 0;
-
-        var files = Directory.GetFiles(folder, $"{participantId}_{speedMs}ms_run-*.csv");
-        return files.Length;
-    }
-
-
-    // Blink detection
+ 
+    // Helper Functions
     private bool IsBlinkFrame(
         XrEyePositionHTC eye,
         ref bool blinkMask,
@@ -182,11 +226,10 @@ public class ContinuousEyeRecorder : MonoBehaviour
         var g = geometrics[(int)eye];
         if (!g.isValid)
             return blinkMask;
-
+ 
         bool isBlink =
             g.eyeOpenness < 0.2f &&
-            g.eyeSqueeze  < 0.6f;
-
+            g.eyeSqueeze < 0.6f;
  
         blinkMask = isBlink;
         return blinkMask;
@@ -195,9 +238,13 @@ public class ContinuousEyeRecorder : MonoBehaviour
 #endif
     }
  
-    // Eye tracking data
-    private void GetPupilData(out float leftRaw, out float rightRaw, out float leftBlinkAware, out float rightBlinkAware, out int leftIsBlink,
-    out int rightIsBlink)
+    private void GetPupilData(
+        out float leftRaw,
+        out float rightRaw,
+        out float leftBlinkAware,
+        out float rightBlinkAware,
+        out int leftIsBlink,
+        out int rightIsBlink)
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         XrSingleEyePupilDataHTC[] pupils = null;
@@ -212,44 +259,31 @@ public class ContinuousEyeRecorder : MonoBehaviour
             var L = pupils[(int)XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC];
             var R = pupils[(int)XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC];
  
-            // Raw pupil (no blink filtering)
             if (L.isDiameterValid)
                 leftRaw = L.pupilDiameter;
-
+ 
             if (R.isDiameterValid)
                 rightRaw = R.pupilDiameter;
-
-            // Blink-aware pupil
+ 
             bool leftBlink = IsBlinkFrame(
                 XrEyePositionHTC.XR_EYE_POSITION_LEFT_HTC,
                 ref leftBlinkMask,
                 L
             );
-
+ 
             bool rightBlink = IsBlinkFrame(
                 XrEyePositionHTC.XR_EYE_POSITION_RIGHT_HTC,
                 ref rightBlinkMask,
                 R
             );
-            
-            // IsBlink (1/0)
-            leftIsBlink  = leftBlink  ? 1 : 0;
+ 
+            leftIsBlink = leftBlink ? 1 : 0;
             rightIsBlink = rightBlink ? 1 : 0;
-
-
-            if (!leftBlink && L.isDiameterValid)
-                leftBlinkAware = L.pupilDiameter;
-            else
-                leftBlinkAware = -1f;
-
-
-            if (!rightBlink && R.isDiameterValid)
-                rightBlinkAware = R.pupilDiameter;
-            else
-                rightBlinkAware = -1f;
+ 
+            leftBlinkAware = (!leftBlink && L.isDiameterValid) ? L.pupilDiameter : -1f;
+            rightBlinkAware = (!rightBlink && R.isDiameterValid) ? R.pupilDiameter : -1f;
         }
 #else
-        // Editor mock
         leftRaw = rightRaw = 3.0f;
         leftBlinkAware = rightBlinkAware = 3.0f;
         leftIsBlink = rightIsBlink = 0;
@@ -258,6 +292,6 @@ public class ContinuousEyeRecorder : MonoBehaviour
  
     void OnDestroy()
     {
-        writer?.Close();
+        StopRecording();
     }
 }

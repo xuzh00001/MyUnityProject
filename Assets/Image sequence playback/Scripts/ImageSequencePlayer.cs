@@ -135,14 +135,14 @@ public class ImageSequencePlayer : MonoBehaviour
 
     IEnumerator MainRoutine()
     {
-        // baseline 10s in total
+        // baseline 5s in total
         SetBlock(ContinuousEyeRecorder.BlockType.Baseline);
         ShowCrosshair(true);
         // Lock after 3s
         yield return new WaitForSecondsRealtime(3f);
         rigLock.LockRig();
         roomLockToCamera.LockRoomToCamera();
-        yield return new WaitForSecondsRealtime(7f);
+        yield return new WaitForSecondsRealtime(2f);
         ShowCrosshair(false);
 
         // trials
