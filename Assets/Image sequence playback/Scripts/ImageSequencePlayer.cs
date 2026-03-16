@@ -16,6 +16,7 @@ public class ImageSequencePlayer : MonoBehaviour
     public ContinuousEyeRecorder eyeRecorder;
     public GameObject playCanvas;
     public Texture2D customGrayTexture;
+    public Texture2D crosshairTexture;
 
     [System.Serializable]
     public class CategoryBlock
@@ -33,8 +34,6 @@ public class ImageSequencePlayer : MonoBehaviour
     private Material screenMat;
     private Texture2D blackTex;
     private Texture2D grayTex;
-    private Texture2D crosshairTex;
-
     private int currentSpeedMs;
     private float imageInterval;
 
@@ -70,7 +69,7 @@ public class ImageSequencePlayer : MonoBehaviour
         blackTex.Apply();
 
         grayTex = customGrayTexture;
-        crosshairTex = GenerateCrosshair(256, 256);
+        // crosshairTex = GenerateCrosshair(256, 256);
 
         SetTexture(blackTex);
     }
@@ -223,7 +222,7 @@ public class ImageSequencePlayer : MonoBehaviour
     void ShowCrosshair(bool enable)
     {
         if (enable)
-            screenMat.mainTexture = crosshairTex;
+            screenMat.mainTexture = crosshairTexture;
     }
 
     void Shuffle<T>(T[] array)
@@ -233,33 +232,5 @@ public class ImageSequencePlayer : MonoBehaviour
             int j = Random.Range(i, array.Length);
             (array[i], array[j]) = (array[j], array[i]);
         }
-    }
-
-    Texture2D GenerateCrosshair(int w, int h)
-    {
-        Texture2D tex = new Texture2D(w, h);
-        Color bg = Color.black;
-        Color fg = Color.white;
-
-        int lineLength = w / 20;
-        int thickness = w / 175;
-
-        for (int y = 0; y < h; y++)
-        for (int x = 0; x < w; x++)
-            tex.SetPixel(x, y, bg);
-
-        int cx = w / 2;
-        int cy = h / 2;
-
-        for (int y = cy - lineLength; y <= cy + lineLength; y++)
-        for (int k = -thickness; k <= thickness; k++)
-            tex.SetPixel(cx + k, y, fg);
-
-        for (int x = cx - lineLength; x <= cx + lineLength; x++)
-        for (int k = -thickness; k <= thickness; k++)
-            tex.SetPixel(x, cy + k, fg);
-
-        tex.Apply();
-        return tex;
     }
 }
