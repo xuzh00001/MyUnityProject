@@ -21,17 +21,18 @@ public class RSVPSequencePlayer : MonoBehaviour
     [System.Serializable]
     public class CategoryBlock
     {
-        [Header("Category name")]
         public string name;
-
-        [Header("Target image")]
         public Texture2D targetImage;
-
-        [Header("All images in this category (INCLUDING target)")]
         public Texture2D[] allImages;
     }
 
     public CategoryBlock[] categoryBlocks;
+
+    [Header("50ms extra non-target pool (no repeat)")]
+    public Texture2D[] extraNonTargetPool50;
+
+    private List<Texture2D> extraPoolRuntime;
+    private int extraPoolIndex = 0;
 
     private CategoryBlock[] originalBlocks;
 
@@ -50,9 +51,7 @@ public class RSVPSequencePlayer : MonoBehaviour
     private int selectedSpeedMs = -1;
     private bool hasStarted = false;
 
-    const int imagesPerTrial = 20;
-    const int minTargetPos = 5;
-    const int maxTargetPos = 14;
+    const int defaultImagesPerTrial = 20;
 
     CategoryBlock[] CloneAndShuffleBlocks(CategoryBlock[] original)
     {
@@ -129,6 +128,13 @@ public class RSVPSequencePlayer : MonoBehaviour
         currentSpeedMs = speedMs;
         imageInterval = speedMs / 1000f;
 
+        if (speedMs == 50)
+        {
+            extraPoolRuntime = new List<Texture2D>(extraNonTargetPool50);
+            Shuffle(extraPoolRuntime);
+            extraPoolIndex = 0;
+        }
+
         if (!cachedOrders.ContainsKey(speedMs))
         {
             cachedOrders[speedMs] = CloneAndShuffleBlocks(originalBlocks);
@@ -204,12 +210,6 @@ public class RSVPSequencePlayer : MonoBehaviour
     {
         var block = categoryBlocks[trialNumber - 1];
 
-        if (block.targetImage == null)
-        {
-            Debug.LogError($"Category {block.name} has no target image!");
-            yield break;
-        }
-
         RSVPEyeRecorder.CurrentBlock = RSVPEyeRecorder.BlockType.Stimulus;
         RSVPEyeRecorder.CurrentTrial = trialNumber;
         RSVPEyeRecorder.CurrentCategory = block.name;
@@ -239,9 +239,12 @@ public class RSVPSequencePlayer : MonoBehaviour
 
     Texture2D[] BuildSequence(CategoryBlock block)
     {
-        Texture2D[] sequence = new Texture2D[imagesPerTrial];
+        bool is50ms = currentSpeedMs == 50;
 
-        int targetPosition = Random.Range(minTargetPos, maxTargetPos + 1);
+        int baseLength = defaultImagesPerTrial;
+        Texture2D[] baseSequence = new Texture2D[baseLength];
+
+        int targetPosition = Random.Range(5, 15);
 
         List<Texture2D> pool = new List<Texture2D>();
 
@@ -251,37 +254,56 @@ public class RSVPSequencePlayer : MonoBehaviour
                 pool.Add(img);
         }
 
-        if (pool.Count == 0)
-        {
-            Debug.LogError($"Category {block.name} has no distractor images!");
-            return sequence;
-        }
-
         Shuffle(pool);
 
         int distractorIndex = 0;
 
-        for (int i = 0; i < imagesPerTrial; i++)
+        for (int i = 0; i < baseLength; i++)
         {
             if (i == targetPosition)
             {
-                sequence[i] = block.targetImage;
+                baseSequence[i] = block.targetImage;
             }
             else
             {
                 if (distractorIndex < pool.Count)
-                {
-                    sequence[i] = pool[distractorIndex];
-                    distractorIndex++;
-                }
+                    baseSequence[i] = pool[distractorIndex++];
                 else
-                {
-                    sequence[i] = pool[Random.Range(0, pool.Count)];
-                }
+                    baseSequence[i] = pool[Random.Range(0, pool.Count)];
             }
         }
 
-        return sequence;
+        if (!is50ms)
+            return baseSequence;
+
+        // 50ms: 20 + 10 images
+        int extraCount = 10;
+        Texture2D[] finalSequence = new Texture2D[baseLength + extraCount];
+
+        for (int i = 0; i < baseLength; i++)
+            finalSequence[i] = baseSequence[i];
+
+        for (int i = 0; i < extraCount; i++)
+        {
+            if (extraPoolRuntime == null || extraPoolRuntime.Count == 0)
+            {
+                Debug.LogError("Extra pool empty!");
+                break;
+            }
+
+            if (extraPoolIndex >= extraPoolRuntime.Count)
+            {
+                finalSequence[baseLength + i] =
+                    extraPoolRuntime[Random.Range(0, extraPoolRuntime.Count)];
+            }
+            else
+            {
+                finalSequence[baseLength + i] =
+                    extraPoolRuntime[extraPoolIndex++];
+            }
+        }
+
+        return finalSequence;
     }
 
     int FindTarget(Texture2D[] seq, Texture2D target)
