@@ -137,11 +137,11 @@ public class ImageSequencePlayer : MonoBehaviour
         // baseline 5s in total
         SetBlock(ContinuousEyeRecorder.BlockType.Baseline);
         ShowCrosshair(true);
-        // Lock after 3s
-        yield return new WaitForSecondsRealtime(3f);
+        // Lock after 2s
+        yield return new WaitForSecondsRealtime(2f);
         rigLock.LockRig();
         roomLockToCamera.LockRoomToCamera();
-        yield return new WaitForSecondsRealtime(2f);
+        yield return new WaitForSecondsRealtime(3f);
         ShowCrosshair(false);
 
         // trials
@@ -188,6 +188,19 @@ public class ImageSequencePlayer : MonoBehaviour
             ContinuousEyeRecorder.CurrentImageName = block.images[i].name;
 
             yield return new WaitForSecondsRealtime(imageInterval);
+            
+            // add 100ms gray screen gap after each image
+            if (i < block.images.Length - 1)
+            {
+                SetBlock(ContinuousEyeRecorder.BlockType.Interval);
+                SetTexture(grayTex);
+
+                yield return new WaitForSecondsRealtime(0.1f); // 100ms
+
+                ContinuousEyeRecorder.CurrentBlock = ContinuousEyeRecorder.BlockType.Stimulus;
+                ContinuousEyeRecorder.CurrentTrial = trialNumber;
+                ContinuousEyeRecorder.CurrentCategory = block.name;
+            }
         }
 
         ClearStimulusState();

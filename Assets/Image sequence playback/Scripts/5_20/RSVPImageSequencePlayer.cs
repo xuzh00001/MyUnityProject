@@ -28,12 +28,6 @@ public class RSVPSequencePlayer : MonoBehaviour
 
     public CategoryBlock[] categoryBlocks;
 
-    [Header("50ms extra non-target pool (no repeat)")]
-    public Texture2D[] extraNonTargetPool50;
-
-    private List<Texture2D> extraPoolRuntime;
-    private int extraPoolIndex = 0;
-
     private CategoryBlock[] originalBlocks;
 
     private Dictionary<int, CategoryBlock[]> cachedOrders
@@ -127,13 +121,6 @@ public class RSVPSequencePlayer : MonoBehaviour
 
         currentSpeedMs = speedMs;
         imageInterval = speedMs / 1000f;
-
-        if (speedMs == 50)
-        {
-            extraPoolRuntime = new List<Texture2D>(extraNonTargetPool50);
-            Shuffle(extraPoolRuntime);
-            extraPoolIndex = 0;
-        }
 
         if (!cachedOrders.ContainsKey(speedMs))
         {
@@ -232,6 +219,21 @@ public class RSVPSequencePlayer : MonoBehaviour
             RSVPEyeRecorder.CurrentIsTarget = isTarget ? 1 : 0;
 
             yield return new WaitForSecondsRealtime(imageInterval);
+
+            // add 100ms gray screen after each images
+            if (i < sequence.Length - 1)
+            {
+                SetBlock(RSVPEyeRecorder.BlockType.Interval);
+                SetTexture(grayTex);
+
+                yield return new WaitForSecondsRealtime(0.1f);
+
+                RSVPEyeRecorder.CurrentBlock = RSVPEyeRecorder.BlockType.Stimulus;
+                RSVPEyeRecorder.CurrentTrial = trialNumber;
+                RSVPEyeRecorder.CurrentCategory = block.name;
+                RSVPEyeRecorder.CurrentTargetImageName = block.targetImage.name;
+                RSVPEyeRecorder.CurrentTargetPosition = targetPos + 1;
+            }
         }
 
         ClearStimulusState();
@@ -239,8 +241,6 @@ public class RSVPSequencePlayer : MonoBehaviour
 
     Texture2D[] BuildSequence(CategoryBlock block)
     {
-        bool is50ms = currentSpeedMs == 50;
-
         int baseLength = defaultImagesPerTrial;
         Texture2D[] baseSequence = new Texture2D[baseLength];
 
@@ -273,37 +273,7 @@ public class RSVPSequencePlayer : MonoBehaviour
             }
         }
 
-        if (!is50ms)
-            return baseSequence;
-
-        // 50ms: 20 + 10 images
-        int extraCount = 10;
-        Texture2D[] finalSequence = new Texture2D[baseLength + extraCount];
-
-        for (int i = 0; i < baseLength; i++)
-            finalSequence[i] = baseSequence[i];
-
-        for (int i = 0; i < extraCount; i++)
-        {
-            if (extraPoolRuntime == null || extraPoolRuntime.Count == 0)
-            {
-                Debug.LogError("Extra pool empty!");
-                break;
-            }
-
-            if (extraPoolIndex >= extraPoolRuntime.Count)
-            {
-                finalSequence[baseLength + i] =
-                    extraPoolRuntime[Random.Range(0, extraPoolRuntime.Count)];
-            }
-            else
-            {
-                finalSequence[baseLength + i] =
-                    extraPoolRuntime[extraPoolIndex++];
-            }
-        }
-
-        return finalSequence;
+        return baseSequence;
     }
 
     int FindTarget(Texture2D[] seq, Texture2D target)
