@@ -239,24 +239,48 @@ public class RSVPSequencePlayer : MonoBehaviour
         ClearStimulusState();
     }
 
-    Texture2D[] BuildSequence(CategoryBlock block)
+   Texture2D[] BuildSequence(CategoryBlock block)
     {
         int baseLength = defaultImagesPerTrial;
         Texture2D[] baseSequence = new Texture2D[baseLength];
 
-        // The target image will not appear in the first 1000ms and the last 1000ms.
-        float stimulusDuration = imageInterval + 0.1f; // image present time + gap (100ms)
-        int totalLength = defaultImagesPerTrial;
-        int forbiddenCount = Mathf.CeilToInt(1.0f / stimulusDuration);
+        int minIndex = 0;
+        int maxIndex = baseLength - 1;
 
-        int minIndex = forbiddenCount;
-        int maxIndex = totalLength - forbiddenCount - 1;
+
+        if (currentSpeedMs == 50 || currentSpeedMs == 100)
+        {
+            float stimulusDuration = imageInterval + 0.1f; // image + 100ms gap
+
+            int forbiddenCount = Mathf.CeilToInt(1.0f / stimulusDuration);
+
+            minIndex = forbiddenCount;
+            maxIndex = baseLength - forbiddenCount - 1;
+        }
+        else if (currentSpeedMs == 150 || currentSpeedMs == 200)
+        {
+            int forbiddenStart = 4;
+            int forbiddenEnd = 6;
+
+            minIndex = forbiddenStart;
+            maxIndex = baseLength - forbiddenEnd - 1;
+        }
+        else
+        {
+            Debug.LogWarning($"No constraint defined for {currentSpeedMs}ms, using default.");
+
+            int forbiddenStart = 4;
+            int forbiddenEnd = 4;
+
+            minIndex = forbiddenStart;
+            maxIndex = baseLength - forbiddenEnd - 1;
+        }
 
         if (minIndex >= maxIndex)
         {
-            Debug.LogWarning("Sequence too short for 1000ms constraint!");
+            Debug.LogWarning("Invalid target range! Fallback to full range.");
             minIndex = 0;
-            maxIndex = totalLength - 1;
+            maxIndex = baseLength - 1;
         }
 
         int targetPosition = Random.Range(minIndex, maxIndex + 1);
@@ -290,7 +314,6 @@ public class RSVPSequencePlayer : MonoBehaviour
 
         return baseSequence;
     }
-
     int FindTarget(Texture2D[] seq, Texture2D target)
     {
         for (int i = 0; i < seq.Length; i++)
