@@ -226,7 +226,7 @@ public class RSVPSequencePlayer : MonoBehaviour
                 SetBlock(RSVPEyeRecorder.BlockType.Interval);
                 SetTexture(grayTex);
 
-                yield return new WaitForSecondsRealtime(0.1f);
+                yield return new WaitForSecondsRealtime(0.1f); // gap: 100ms
 
                 RSVPEyeRecorder.CurrentBlock = RSVPEyeRecorder.BlockType.Stimulus;
                 RSVPEyeRecorder.CurrentTrial = trialNumber;
@@ -244,7 +244,22 @@ public class RSVPSequencePlayer : MonoBehaviour
         int baseLength = defaultImagesPerTrial;
         Texture2D[] baseSequence = new Texture2D[baseLength];
 
-        int targetPosition = Random.Range(5, 15);
+        // The target image will not appear in the first 1000ms and the last 1000ms.
+        float stimulusDuration = imageInterval + 0.1f; // image present time + gap (100ms)
+        int totalLength = defaultImagesPerTrial;
+        int forbiddenCount = Mathf.CeilToInt(1.0f / stimulusDuration);
+
+        int minIndex = forbiddenCount;
+        int maxIndex = totalLength - forbiddenCount - 1;
+
+        if (minIndex >= maxIndex)
+        {
+            Debug.LogWarning("Sequence too short for 1000ms constraint!");
+            minIndex = 0;
+            maxIndex = totalLength - 1;
+        }
+
+        int targetPosition = Random.Range(minIndex, maxIndex + 1);
 
         List<Texture2D> pool = new List<Texture2D>();
 
