@@ -8060,28 +8060,28 @@ MonoBehaviour:
     pageEnd: {fileID: 1088590128}
     progressText: {fileID: 1888537933}
     speedMs: 50
-    targetRuns: 1
+    targetRuns: 2
   - sessionName: B
     pageReady: {fileID: 2133344241}
     pageProgress: {fileID: 1856474439}
     pageEnd: {fileID: 1034958696}
     progressText: {fileID: 1134513054}
     speedMs: 100
-    targetRuns: 1
+    targetRuns: 2
   - sessionName: C
     pageReady: {fileID: 2010960764}
     pageProgress: {fileID: 237059195}
     pageEnd: {fileID: 1993927955}
     progressText: {fileID: 1880751074}
     speedMs: 150
-    targetRuns: 1
+    targetRuns: 2
   - sessionName: D
     pageReady: {fileID: 413807339}
     pageProgress: {fileID: 1981348175}
     pageEnd: {fileID: 0}
     progressText: {fileID: 193143343}
     speedMs: 200
-    targetRuns: 1
+    targetRuns: 2
 --- !u!114 &1401217678
 MonoBehaviour:
   m_ObjectHideFlags: 0

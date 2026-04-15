@@ -45,7 +45,8 @@ public class RSVPSequencePlayer : MonoBehaviour
     private int selectedSpeedMs = -1;
     private bool hasStarted = false;
 
-    const int defaultImagesPerTrial = 20;
+
+    const int defaultImagesPerTrial = 10;
 
     CategoryBlock[] CloneAndShuffleBlocks(CategoryBlock[] original)
     {
@@ -220,13 +221,12 @@ public class RSVPSequencePlayer : MonoBehaviour
 
             yield return new WaitForSecondsRealtime(imageInterval);
 
-            // add 100ms gray screen after each images
             if (i < sequence.Length - 1)
             {
                 SetBlock(RSVPEyeRecorder.BlockType.Interval);
                 SetTexture(grayTex);
 
-                yield return new WaitForSecondsRealtime(0.1f); // gap: 100ms
+                yield return new WaitForSecondsRealtime(0.1f);
 
                 RSVPEyeRecorder.CurrentBlock = RSVPEyeRecorder.BlockType.Stimulus;
                 RSVPEyeRecorder.CurrentTrial = trialNumber;
@@ -239,46 +239,20 @@ public class RSVPSequencePlayer : MonoBehaviour
         ClearStimulusState();
     }
 
-   Texture2D[] BuildSequence(CategoryBlock block)
+    Texture2D[] BuildSequence(CategoryBlock block)
     {
         int baseLength = defaultImagesPerTrial;
         Texture2D[] baseSequence = new Texture2D[baseLength];
 
-        int minIndex = 0;
-        int maxIndex = baseLength - 1;
+        int forbiddenStart = 3;
+        int forbiddenEnd = 3;
 
-
-        if (currentSpeedMs == 50 || currentSpeedMs == 100)
-        {
-            float stimulusDuration = imageInterval + 0.1f; // image + 100ms gap
-
-            int forbiddenCount = Mathf.CeilToInt(1.0f / stimulusDuration);
-
-            minIndex = forbiddenCount;
-            maxIndex = baseLength - forbiddenCount - 1;
-        }
-        else if (currentSpeedMs == 150 || currentSpeedMs == 200)
-        {
-            int forbiddenStart = 4;
-            int forbiddenEnd = 6;
-
-            minIndex = forbiddenStart;
-            maxIndex = baseLength - forbiddenEnd - 1;
-        }
-        else
-        {
-            Debug.LogWarning($"No constraint defined for {currentSpeedMs}ms, using default.");
-
-            int forbiddenStart = 4;
-            int forbiddenEnd = 4;
-
-            minIndex = forbiddenStart;
-            maxIndex = baseLength - forbiddenEnd - 1;
-        }
+        int minIndex = forbiddenStart;
+        int maxIndex = baseLength - forbiddenEnd - 1;
 
         if (minIndex >= maxIndex)
         {
-            Debug.LogWarning("Invalid target range! Fallback to full range.");
+            Debug.LogWarning("Invalid target range! Fallback.");
             minIndex = 0;
             maxIndex = baseLength - 1;
         }
@@ -314,6 +288,7 @@ public class RSVPSequencePlayer : MonoBehaviour
 
         return baseSequence;
     }
+
     int FindTarget(Texture2D[] seq, Texture2D target)
     {
         for (int i = 0; i < seq.Length; i++)
