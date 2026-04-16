@@ -45,6 +45,8 @@ public class RSVPSequencePlayer : MonoBehaviour
     private int selectedSpeedMs = -1;
     private bool hasStarted = false;
 
+    const int defaultImagesPerTrial = 20;
+
     CategoryBlock[] CloneAndShuffleBlocks(CategoryBlock[] original)
     {
         CategoryBlock[] clone = new CategoryBlock[original.Length];
@@ -123,27 +125,25 @@ public class RSVPSequencePlayer : MonoBehaviour
         if (!cachedOrders.ContainsKey(speedMs))
         {
             cachedOrders[speedMs] = CloneAndShuffleBlocks(originalBlocks);
-
             var blocks = cachedOrders[speedMs];
+
             int[] targetPositions = new int[blocks.Length];
 
             for (int i = 0; i < blocks.Length; i++)
             {
-                targetPositions[i] = GenerateTargetPosition();
+                targetPositions[i] = GetTargetPosition();
             }
 
             cachedTargetPositions[speedMs] = targetPositions;
 
-            Debug.Log($"Created cached order and target positions for {speedMs}ms");
+            Debug.Log($"Created order + fixed target positions for {speedMs}ms");
         }
 
         categoryBlocks = cachedOrders[speedMs];
 
         eyeRecorder.SetSpeed(speedMs);
 
-        if (playCanvas != null)
-            playCanvas.SetActive(false);
-
+        playCanvas.SetActive(false);
         StartSequence();
     }
 
@@ -197,13 +197,15 @@ public class RSVPSequencePlayer : MonoBehaviour
     {
         var block = categoryBlocks[trialNumber - 1];
 
-        int targetPos = cachedTargetPositions[currentSpeedMs][trialNumber - 1];
-        Texture2D[] sequence = BuildSequence(block, targetPos);
-
         RSVPEyeRecorder.CurrentBlock = RSVPEyeRecorder.BlockType.Stimulus;
         RSVPEyeRecorder.CurrentTrial = trialNumber;
         RSVPEyeRecorder.CurrentCategory = block.name;
-        RSVPEyeRecorder.CurrentTargetImageName = block.targetImage != null ? block.targetImage.name : "NA";
+        RSVPEyeRecorder.CurrentTargetImageName = block.targetImage.name;
+
+        int targetPos = cachedTargetPositions[currentSpeedMs][trialNumber - 1];
+
+        Texture2D[] sequence = BuildSequence(block, targetPos);
+
         RSVPEyeRecorder.CurrentTargetPosition = targetPos + 1;
 
         for (int i = 0; i < sequence.Length; i++)
@@ -214,7 +216,7 @@ public class RSVPSequencePlayer : MonoBehaviour
             SetTexture(currentImage);
 
             RSVPEyeRecorder.CurrentIndex = i + 1;
-            RSVPEyeRecorder.CurrentImageName = currentImage != null ? currentImage.name : "NA";
+            RSVPEyeRecorder.CurrentImageName = currentImage.name;
             RSVPEyeRecorder.CurrentIsTarget = isTarget ? 1 : 0;
 
             yield return new WaitForSecondsRealtime(imageInterval);
@@ -229,7 +231,7 @@ public class RSVPSequencePlayer : MonoBehaviour
                 RSVPEyeRecorder.CurrentBlock = RSVPEyeRecorder.BlockType.Stimulus;
                 RSVPEyeRecorder.CurrentTrial = trialNumber;
                 RSVPEyeRecorder.CurrentCategory = block.name;
-                RSVPEyeRecorder.CurrentTargetImageName = block.targetImage != null ? block.targetImage.name : "NA";
+                RSVPEyeRecorder.CurrentTargetImageName = block.targetImage.name;
                 RSVPEyeRecorder.CurrentTargetPosition = targetPos + 1;
             }
         }
@@ -237,95 +239,80 @@ public class RSVPSequencePlayer : MonoBehaviour
         ClearStimulusState();
     }
 
-    int GetImagesPerTrial()
-    {
-        if (currentSpeedMs == 50) return 20;
-        if (currentSpeedMs == 100) return 16;
-        if (currentSpeedMs == 150) return 12;
-        if (currentSpeedMs == 200) return 10;
-
-        Debug.LogWarning($"Unknown speed {currentSpeedMs}, fallback to 10 images.");
-        return 10;
-    }
-
-    int GenerateTargetPosition()
-    {
-        int baseLength = GetImagesPerTrial();
-
-        float stimulusDuration = imageInterval + 0.1f;
-
-        int forbiddenCount = Mathf.CeilToInt(1.0f / stimulusDuration);
-
-        int minIndex = forbiddenCount;
-        int maxIndex = baseLength - forbiddenCount - 1;
-
-        if (minIndex > maxIndex)
-        {
-            Debug.LogWarning(
-                $"[{currentSpeedMs}ms] Target range too small. Falling back to center range."
-            );
-
-            minIndex = Mathf.Max(0, baseLength / 3);
-            maxIndex = Mathf.Min(baseLength - 1, baseLength * 2 / 3);
-        }
-
-        return Random.Range(minIndex, maxIndex + 1);
-    }
-
     Texture2D[] BuildSequence(CategoryBlock block, int targetPosition)
     {
-        int baseLength = GetImagesPerTrial();
-        Texture2D[] baseSequence = new Texture2D[baseLength];
+        int baseLength = defaultImagesPerTrial;
+        Texture2D[] sequence = new Texture2D[baseLength];
 
         List<Texture2D> pool = new List<Texture2D>();
 
-        if (block.allImages != null)
+        foreach (var img in block.allImages)
         {
-            foreach (var img in block.allImages)
-            {
-                if (img != null && img != block.targetImage)
-                    pool.Add(img);
-            }
-        }
-
-        if (pool.Count == 0)
-        {
-            Debug.LogError($"Category '{block.name}' has no non-target images.");
-            for (int i = 0; i < baseLength; i++)
-            {
-                baseSequence[i] = block.targetImage;
-            }
-            return baseSequence;
+            if (img != null && img != block.targetImage)
+                pool.Add(img);
         }
 
         Shuffle(pool);
 
-        int distractorIndex = 0;
+        int idx = 0;
 
         for (int i = 0; i < baseLength; i++)
         {
             if (i == targetPosition)
             {
-                baseSequence[i] = block.targetImage;
+                sequence[i] = block.targetImage;
             }
             else
             {
-                baseSequence[i] = pool[distractorIndex % pool.Count];
-                distractorIndex++;
+                if (idx < pool.Count)
+                    sequence[i] = pool[idx++];
+                else
+                    sequence[i] = pool[Random.Range(0, pool.Count)];
             }
         }
 
-        return baseSequence;
+        return sequence;
     }
 
-    int FindTarget(Texture2D[] seq, Texture2D target)
+    int GetTargetPosition()
     {
-        for (int i = 0; i < seq.Length; i++)
+        int baseLength = defaultImagesPerTrial;
+
+        int minIndex = 0;
+        int maxIndex = baseLength - 1;
+
+        if (currentSpeedMs == 50 || currentSpeedMs == 100)
         {
-            if (seq[i] == target)
-                return i;
+            float stimulusDuration = imageInterval + 0.1f;
+            int forbiddenCount = Mathf.CeilToInt(1.0f / stimulusDuration);
+
+            minIndex = forbiddenCount;
+            maxIndex = baseLength - forbiddenCount - 1;
         }
-        return -1;
+        else if (currentSpeedMs == 150)
+        {
+            minIndex = 4;
+            maxIndex = baseLength - 8 - 1;
+        }
+        else if (currentSpeedMs == 200)
+        {
+            minIndex = 4;
+            maxIndex = baseLength - 7 - 1;
+        }
+        else
+        {
+            minIndex = 4;
+            maxIndex = baseLength - 4 - 1;
+        }
+
+        if (minIndex >= maxIndex)
+        {
+            Debug.LogWarning("Invalid target range → fallback");
+            minIndex = 0;
+            maxIndex = baseLength - 1;
+        }
+
+        return Random.Range(minIndex, maxIndex + 1);
     }
 
     IEnumerator ShowInterval(float t)
