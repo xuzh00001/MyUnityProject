@@ -7507,6 +7507,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7499810140834356217, guid: d9470993b9bd0a541a884d6f6704a421, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 040de296b6255ed45a5f3918b5c750e0, type: 2}
     - target: {fileID: 7803313389024695174, guid: d9470993b9bd0a541a884d6f6704a421, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -8060,28 +8064,28 @@ MonoBehaviour:
     pageEnd: {fileID: 1088590128}
     progressText: {fileID: 1888537933}
     speedMs: 50
-    targetRuns: 6
+    targetRuns: 1
   - sessionName: B
     pageReady: {fileID: 2133344241}
     pageProgress: {fileID: 1856474439}
     pageEnd: {fileID: 1034958696}
     progressText: {fileID: 1134513054}
     speedMs: 100
-    targetRuns: 6
+    targetRuns: 1
   - sessionName: C
     pageReady: {fileID: 2010960764}
     pageProgress: {fileID: 237059195}
     pageEnd: {fileID: 1993927955}
     progressText: {fileID: 1880751074}
     speedMs: 150
-    targetRuns: 6
+    targetRuns: 1
   - sessionName: D
     pageReady: {fileID: 413807339}
     pageProgress: {fileID: 1981348175}
     pageEnd: {fileID: 0}
     progressText: {fileID: 193143343}
     speedMs: 200
-    targetRuns: 6
+    targetRuns: 1
 --- !u!114 &1401217678
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8716,7 +8720,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 346193216570831551, guid: a3051c696c83442f8b9a1c115ffa2359, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2664650675434728556, guid: a3051c696c83442f8b9a1c115ffa2359, type: 3}
       propertyPath: m_Name
@@ -8724,7 +8728,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3436647868658284246, guid: a3051c696c83442f8b9a1c115ffa2359, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.5000014
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 3436647868658284246, guid: a3051c696c83442f8b9a1c115ffa2359, type: 3}
       propertyPath: m_LocalScale.y
