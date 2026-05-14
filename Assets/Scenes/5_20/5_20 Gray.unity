@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 6075206}
   - component: {fileID: 6075205}
   m_Layer: 0
-  m_Name: Button_Start
+  m_Name: Button_Begin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -757,7 +757,7 @@ GameObject:
   - component: {fileID: 153206851}
   - component: {fileID: 153206850}
   m_Layer: 0
-  m_Name: Button_Start
+  m_Name: Button_Begin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1221,7 +1221,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f50efcb2d5f9f2a4d82265af2cb53c9e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 422644945465b194b83e47f52bda33ea, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1451,7 +1451,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Begin
+  m_text: "Continue\r"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 79459efec17a4d00a321bdcc27bbc385, type: 2}
@@ -2715,7 +2715,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e15343dbe62625443be2b0cfb2c31cb2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d844ef9018ad7a043945fcf0ccf165d0, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2791,7 +2791,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 89061e2fb7f9eba419d8ea40e8950b7c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 78f02f2d828bec848b8f4b68bd3bda89, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3623,7 +3623,7 @@ GameObject:
   - component: {fileID: 596472596}
   - component: {fileID: 596472595}
   m_Layer: 0
-  m_Name: Button_Next
+  m_Name: Button_Continue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3647,7 +3647,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -340}
-  m_SizeDelta: {x: 140, y: 90}
+  m_SizeDelta: {x: 155, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &596472595
 MonoBehaviour:
@@ -4924,7 +4924,7 @@ GameObject:
   - component: {fileID: 866942415}
   - component: {fileID: 866942414}
   m_Layer: 0
-  m_Name: Button_Start
+  m_Name: Button_Begin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5646,7 +5646,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1b08cc9adff2c944e89c0a94d46721de, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 18104de70bbf4854d81a57d07a94fb4c, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6799,7 +6799,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e83a03ee477f48c45b2265bde196871a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c9fd5d46fb061ee4f93a2a0f1cc79e9d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -7009,7 +7009,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e6b4d24092337d94dadd64773571c9ee, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e643f12f3392bca4990a5520b2d5b08d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -7397,7 +7397,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 858cf03a338d26041a8f6c5fcf0af307, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e20e92543855ca64ab56829d616c2d82, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8063,29 +8063,29 @@ MonoBehaviour:
     pageProgress: {fileID: 1406065732}
     pageEnd: {fileID: 1088590128}
     progressText: {fileID: 1888537933}
-    speedMs: 50
-    targetRuns: 1
+    speedMs: 10
+    targetRuns: 2
   - sessionName: B
     pageReady: {fileID: 2133344241}
     pageProgress: {fileID: 1856474439}
     pageEnd: {fileID: 1034958696}
     progressText: {fileID: 1134513054}
-    speedMs: 100
-    targetRuns: 1
+    speedMs: 10
+    targetRuns: 2
   - sessionName: C
     pageReady: {fileID: 2010960764}
     pageProgress: {fileID: 237059195}
     pageEnd: {fileID: 1993927955}
     progressText: {fileID: 1880751074}
-    speedMs: 150
-    targetRuns: 1
+    speedMs: 10
+    targetRuns: 2
   - sessionName: D
     pageReady: {fileID: 413807339}
     pageProgress: {fileID: 1981348175}
     pageEnd: {fileID: 0}
     progressText: {fileID: 193143343}
-    speedMs: 200
-    targetRuns: 1
+    speedMs: 10
+    targetRuns: 2
 --- !u!114 &1401217678
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8280,7 +8280,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 14dce5e3c7b64614f8b0db517a44e2e7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 98e1a7a751e25164e90c47d4445b06fa, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8554,7 +8554,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: d6dfa00e4a6a6be4492c024c69efa91b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 62c5cf267736cf34e8e38730e178a672, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9618,7 +9618,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 579f3840863926348b930c7f42e6b79d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6e1c05b04a7245f43bfe0ca83dcc7836, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -10744,7 +10744,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 40c770c071cdbf744a73fa33520e034f, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0071898dc47d4784d9067002deacda24, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -10934,7 +10934,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: c6aa24370297f174fad62dbacb180594, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6592f81f465affd40b99a2d581f429d0, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -11010,7 +11010,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 9da0b607270c1a04da3bf03638c72ddc, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ca0637209a436bd4cbda01e1a7b99f73, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -11256,7 +11256,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f9abdc03daf7cce42b3fdcdf130e6aff, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 19ae1e600aa99a545a4ecdddf8d81a66, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
