@@ -7711,8 +7711,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetFrameRate: 120
-  participantId: P03
-  attackerId: A03
+  participantId: PTest
+  attackerId: ATest
 --- !u!1 &990306417
 GameObject:
   m_ObjectHideFlags: 0
@@ -10692,8 +10692,8 @@ MonoBehaviour:
   sessions:
   - sessionName: A
     speedMs: 50
-    userRuns: 1
-    attackerRuns: 1
+    userRuns: 2
+    attackerRuns: 2
     pageReady: {fileID: 1230627913}
     pageProgress: {fileID: 1406065732}
     pageEnd: {fileID: 1088590128}
@@ -10707,8 +10707,8 @@ MonoBehaviour:
     attackerEndSprite: {fileID: 21300000, guid: 2ea214456796abd42868ce16db3328b9, type: 3}
   - sessionName: B
     speedMs: 100
-    userRuns: 1
-    attackerRuns: 1
+    userRuns: 2
+    attackerRuns: 2
     pageReady: {fileID: 2133344241}
     pageProgress: {fileID: 1856474439}
     pageEnd: {fileID: 1034958696}
@@ -10722,8 +10722,8 @@ MonoBehaviour:
     attackerEndSprite: {fileID: 21300000, guid: 930bb8721f0522b4d9cb77571df0948f, type: 3}
   - sessionName: C
     speedMs: 150
-    userRuns: 1
-    attackerRuns: 1
+    userRuns: 2
+    attackerRuns: 2
     pageReady: {fileID: 2010960764}
     pageProgress: {fileID: 237059195}
     pageEnd: {fileID: 1993927955}
@@ -10737,8 +10737,8 @@ MonoBehaviour:
     attackerEndSprite: {fileID: 21300000, guid: 18dc77317a6f93e4596b14268e806201, type: 3}
   - sessionName: D
     speedMs: 200
-    userRuns: 1
-    attackerRuns: 1
+    userRuns: 2
+    attackerRuns: 2
     pageReady: {fileID: 413807339}
     pageProgress: {fileID: 1981348175}
     pageEnd: {fileID: 935171749}
@@ -10771,6 +10771,7 @@ MonoBehaviour:
   playCanvas: {fileID: 143240857}
   customGrayTexture: {fileID: 2800000, guid: 3d7ba92d1002e6d40a418401463208a6, type: 3}
   crosshairTexture: {fileID: 2800000, guid: 4c9f2e1c29e22ee42a4c465bf952b0fc, type: 3}
+  stimulusImageRenderer: {fileID: 1821316857}
   categoryBlocks:
   - name: Animal
     targetImage: {fileID: 2800000, guid: 8d445b9d39df5284b83e7012b3bb5b8b, type: 3}
@@ -11005,7 +11006,7 @@ MonoBehaviour:
   lockAfterCrosshairSeconds: 2
   categoryIntervalSeconds: 2
   endingGraySeconds: 3
-  fixedSequenceSeed: 2
+  fixedSequenceSeed: 0
 --- !u!1 &1406065732
 GameObject:
   m_ObjectHideFlags: 0
@@ -11622,6 +11623,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4942834752078909503, guid: a3051c696c83442f8b9a1c115ffa2359, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1821316860}
     - targetCorrespondingSourceObject: {fileID: 4942834752078909503, guid: a3051c696c83442f8b9a1c115ffa2359, type: 3}
       insertIndex: -1
       addedObject: {fileID: 143240858}
@@ -12859,6 +12863,112 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1815472012}
   m_CullTransparentMesh: 1
+--- !u!1 &1821316856
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1821316860}
+  - component: {fileID: 1821316859}
+  - component: {fileID: 1821316857}
+  - component: {fileID: 1821316858}
+  m_Layer: 0
+  m_Name: StimulusImagePlane
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &1821316857
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1821316856}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: c4d1458ea2b6195429213335cacfcac1, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &1821316858
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1821316856}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!33 &1821316859
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1821316856}
+  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1821316860
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1821316856}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 3}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1802734627}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1001 &1836655231
 PrefabInstance:
   m_ObjectHideFlags: 0

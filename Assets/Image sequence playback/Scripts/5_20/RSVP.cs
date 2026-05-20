@@ -18,6 +18,10 @@ public class RSVP : MonoBehaviour
     public Texture2D customGrayTexture;
     public Texture2D crosshairTexture;
 
+    [Header("Stimulus Image Display")]
+    [Tooltip("Assign the Renderer of the child Quad / Plane used only for RSVP stimulus images.")]
+    public Renderer stimulusImageRenderer;
+
     [Header("Main RSVP Sessions")]
     public CategoryBlock[] categoryBlocks;
 
@@ -35,7 +39,7 @@ public class RSVP : MonoBehaviour
     public float endingGraySeconds = 3f;
 
     [Header("Deterministic Sequence")]
-    [Tooltip("Use a fixed seed so User Mode and Attacker Mode see exactly the same RSVP order after reopening the app. Change this only if you intentionally want a new fixed order.")]
+    [Tooltip("Same seed means same image order and same target positions, independent of User/Attacker ID and APK rebuild.")]
     public int fixedSequenceSeed = 20251010;
 
     [System.Serializable]
@@ -67,6 +71,7 @@ public class RSVP : MonoBehaviour
 
     private CategoryBlock[] activeBlocks;
     private Material screenMat;
+    private Material stimulusImageMat;
     private Texture2D blackTex;
     private Texture2D grayTex;
 
@@ -92,6 +97,12 @@ public class RSVP : MonoBehaviour
 
         screenMat = screenRenderer.material;
 
+        if (stimulusImageRenderer != null)
+        {
+            stimulusImageMat = stimulusImageRenderer.material;
+            stimulusImageRenderer.gameObject.SetActive(false);
+        }
+
         blackTex = new Texture2D(1, 1);
         blackTex.SetPixel(0, 0, Color.black);
         blackTex.Apply();
@@ -102,6 +113,7 @@ public class RSVP : MonoBehaviour
         originalPracticeBlocks = practiceCategoryBlocks;
         activeBlocks = originalBlocks;
 
+        HideStimulusImage();
         SetTexture(blackTex);
     }
 
@@ -111,7 +123,6 @@ public class RSVP : MonoBehaviour
         Debug.Log($"Speed selected: {speedMs} ms");
     }
 
-    // Kept for backward compatibility with old buttons.
     public void StartTest()
     {
         if (hasStarted) return;
@@ -125,7 +136,6 @@ public class RSVP : MonoBehaviour
         StartSequenceWithSpeed(selectedSpeedMs);
     }
 
-    // Kept for backward compatibility. Prefer StartSessionSequence(sessionName, speedMs) from SystemFlow.
     public void StartSequenceWithSpeed(int speedMs)
     {
         StartSessionSequence($"Speed_{speedMs}", speedMs);
@@ -142,9 +152,13 @@ public class RSVP : MonoBehaviour
         currentSpeedMs = speedMs;
         imageInterval = speedMs / 1000f;
         currentGapSeconds = imageGapSeconds;
-        currentOrderKey = MakeOrderKey(currentSessionName, speedMs);
 
-        EnsureSessionOrderCached(currentOrderKey, currentSessionName, speedMs);
+        // Important:
+        // Image order depends only on fixedSequenceSeed + sessionName.
+        // It does NOT depend on speed, participant ID, attacker ID, runIndex, or build.
+        currentOrderKey = MakeOrderKey(currentSessionName);
+
+        EnsureSessionOrderCached(currentOrderKey, currentSessionName);
         activeBlocks = cachedOrders[currentOrderKey];
         categoryBlocks = activeBlocks;
 
@@ -168,7 +182,8 @@ public class RSVP : MonoBehaviour
         currentSpeedMs = practiceSpeedMs;
         imageInterval = practiceSpeedMs / 1000f;
         currentGapSeconds = practiceImageGapSeconds;
-        currentOrderKey = MakeOrderKey("Practice", practiceSpeedMs);
+
+        currentOrderKey = MakeOrderKey("Practice");
 
         EnsurePracticeOrderCached(currentOrderKey);
         activeBlocks = cachedOrders[currentOrderKey];
@@ -188,6 +203,10 @@ public class RSVP : MonoBehaviour
         hasStarted = true;
 
         playStartTime = Time.realtimeSinceStartup;
+
+        HideStimulusImage();
+        SetBlock(EyeRecorder.BlockType.Baseline);
+        ShowCrosshair(true);
 
         if (eyeRecorder != null)
             eyeRecorder.StartRecording();
@@ -214,9 +233,6 @@ public class RSVP : MonoBehaviour
 
     IEnumerator MainRoutine()
     {
-        SetBlock(EyeRecorder.BlockType.Baseline);
-        ShowCrosshair(true);
-
         yield return new WaitForSecondsRealtime(baselineCrosshairSeconds);
 
         if (rigLock != null)
@@ -226,6 +242,8 @@ public class RSVP : MonoBehaviour
             roomLockToCamera.LockRoomToCamera();
 
         yield return new WaitForSecondsRealtime(lockAfterCrosshairSeconds);
+
+        HideStimulusImage();
         ShowCrosshair(false);
 
         if (activeBlocks != null)
@@ -243,6 +261,7 @@ public class RSVP : MonoBehaviour
         }
 
         SetBlock(EyeRecorder.BlockType.Interval);
+        HideStimulusImage();
         SetTexture(grayTex);
         yield return new WaitForSecondsRealtime(endingGraySeconds);
 
@@ -250,6 +269,8 @@ public class RSVP : MonoBehaviour
             eyeRecorder.StopRecording();
 
         hasStarted = false;
+
+        HideStimulusImage();
 
         if (playCanvas != null)
             playCanvas.SetActive(true);
@@ -286,17 +307,19 @@ public class RSVP : MonoBehaviour
             EyeRecorder.CurrentImageName = currentImage != null ? currentImage.name : "NA";
             EyeRecorder.CurrentIsTarget = isTarget ? 1 : 0;
 
-            SetTexture(currentImage != null ? currentImage : grayTex);
+            ShowStimulusImage(currentImage != null ? currentImage : grayTex);
             yield return new WaitForSecondsRealtime(imageInterval);
 
             if (i < sequence.Length - 1)
             {
                 SetBlock(EyeRecorder.BlockType.Interval);
+                HideStimulusImage();
                 SetTexture(grayTex);
                 yield return new WaitForSecondsRealtime(currentGapSeconds);
             }
         }
 
+        HideStimulusImage();
         ClearStimulusState();
     }
 
@@ -320,35 +343,41 @@ public class RSVP : MonoBehaviour
             EyeRecorder.CurrentImageName = currentImage != null ? currentImage.name : "NA";
             EyeRecorder.CurrentIsTarget = 0;
 
-            SetTexture(currentImage != null ? currentImage : grayTex);
+            ShowStimulusImage(currentImage != null ? currentImage : grayTex);
             yield return new WaitForSecondsRealtime(imageInterval);
 
             if (i < sequence.Length - 1)
             {
                 SetBlock(EyeRecorder.BlockType.Interval);
+                HideStimulusImage();
                 SetTexture(grayTex);
                 yield return new WaitForSecondsRealtime(currentGapSeconds);
             }
         }
 
+        HideStimulusImage();
         ClearStimulusState();
     }
 
-    private void EnsureSessionOrderCached(string key, string sessionName, int speedMs)
+    private void EnsureSessionOrderCached(string key, string sessionName)
     {
         if (cachedOrders.ContainsKey(key) && cachedTargetPositions.ContainsKey(key))
             return;
 
-        System.Random rng = CreateDeterministicRandom(key);
+        DeterministicRandom rng = CreateDeterministicRandom(key);
+
         CategoryBlock[] blocks = CloneAndShuffleBlocks(originalBlocks, rng);
         cachedOrders[key] = blocks;
 
         int[] targetPositions = new int[blocks.Length];
+
         for (int i = 0; i < blocks.Length; i++)
-            targetPositions[i] = GetTargetPosition(speedMs, rng);
+            targetPositions[i] = GetTargetPosition(rng);
 
         cachedTargetPositions[key] = targetPositions;
-        Debug.Log($"Created deterministic RSVP order for {sessionName}, {speedMs} ms, seed {fixedSequenceSeed}");
+
+        Debug.Log($"Created deterministic RSVP image order for {sessionName}. Seed = {fixedSequenceSeed}, key = {key}");
+        Debug.Log($"Order: {DescribeBlockOrder(blocks)}");
     }
 
     private void EnsurePracticeOrderCached(string key)
@@ -356,12 +385,14 @@ public class RSVP : MonoBehaviour
         if (cachedOrders.ContainsKey(key))
             return;
 
-        System.Random rng = CreateDeterministicRandom(key);
+        DeterministicRandom rng = CreateDeterministicRandom(key);
         cachedOrders[key] = CloneAndShufflePracticeBlocks(originalPracticeBlocks, rng);
-        Debug.Log($"Created deterministic practice order, seed {fixedSequenceSeed}");
+
+        Debug.Log($"Created deterministic practice order. Seed = {fixedSequenceSeed}, key = {key}");
+        Debug.Log($"Practice order: {DescribeBlockOrder(cachedOrders[key])}");
     }
 
-    private CategoryBlock[] CloneAndShuffleBlocks(CategoryBlock[] original, System.Random rng)
+    private CategoryBlock[] CloneAndShuffleBlocks(CategoryBlock[] original, DeterministicRandom rng)
     {
         if (original == null) return new CategoryBlock[0];
 
@@ -370,6 +401,7 @@ public class RSVP : MonoBehaviour
         for (int i = 0; i < original.Length; i++)
         {
             CategoryBlock src = original[i];
+
             clone[i] = new CategoryBlock
             {
                 name = src != null ? src.name : "NA",
@@ -386,7 +418,7 @@ public class RSVP : MonoBehaviour
         return clone;
     }
 
-    private CategoryBlock[] CloneAndShufflePracticeBlocks(PracticeCategoryBlock[] original, System.Random rng)
+    private CategoryBlock[] CloneAndShufflePracticeBlocks(PracticeCategoryBlock[] original, DeterministicRandom rng)
     {
         if (original == null) return new CategoryBlock[0];
 
@@ -395,6 +427,7 @@ public class RSVP : MonoBehaviour
         for (int i = 0; i < original.Length; i++)
         {
             PracticeCategoryBlock src = original[i];
+
             clone[i] = new CategoryBlock
             {
                 name = src != null ? src.name : "Practice",
@@ -427,6 +460,7 @@ public class RSVP : MonoBehaviour
         }
 
         int idx = 0;
+
         for (int i = 0; i < baseLength; i++)
         {
             if (i == targetPosition && block.targetImage != null)
@@ -453,6 +487,7 @@ public class RSVP : MonoBehaviour
             return new Texture2D[0];
 
         List<Texture2D> images = new List<Texture2D>();
+
         foreach (var img in block.allImages)
         {
             if (img != null)
@@ -462,26 +497,26 @@ public class RSVP : MonoBehaviour
         return images.ToArray();
     }
 
-    private int GetTargetPosition(int speedMs, System.Random rng)
+    private int GetTargetPosition(DeterministicRandom rng)
     {
         int baseLength = defaultImagesPerTrial;
+
         int minIndex;
         int maxIndex;
-        float interval = speedMs / 1000f;
 
-        if (speedMs == 50 || speedMs == 100)
+        if (currentSpeedMs == 50 || currentSpeedMs == 100)
         {
-            float stimulusDuration = interval + imageGapSeconds;
+            float stimulusDuration = currentSpeedMs / 1000f + imageGapSeconds;
             int forbiddenCount = Mathf.CeilToInt(1.0f / stimulusDuration);
             minIndex = forbiddenCount;
             maxIndex = baseLength - forbiddenCount - 1;
         }
-        else if (speedMs == 150)
+        else if (currentSpeedMs == 150)
         {
             minIndex = 4;
             maxIndex = baseLength - 8 - 1;
         }
-        else if (speedMs == 200)
+        else if (currentSpeedMs == 200)
         {
             minIndex = 4;
             maxIndex = baseLength - 7 - 1;
@@ -494,7 +529,7 @@ public class RSVP : MonoBehaviour
 
         if (minIndex >= maxIndex)
         {
-            Debug.LogWarning("Invalid target range -> fallback");
+            Debug.LogWarning("Invalid target range -> fallback to full sequence.");
             minIndex = 0;
             maxIndex = baseLength - 1;
         }
@@ -505,6 +540,7 @@ public class RSVP : MonoBehaviour
     IEnumerator ShowInterval(float t)
     {
         SetBlock(EyeRecorder.BlockType.Interval);
+        HideStimulusImage();
         SetTexture(grayTex);
         yield return new WaitForSecondsRealtime(t);
     }
@@ -532,22 +568,50 @@ public class RSVP : MonoBehaviour
             screenMat.mainTexture = tex;
     }
 
+    private void ShowStimulusImage(Texture tex)
+    {
+        SetTexture(grayTex);
+
+        if (stimulusImageRenderer == null || stimulusImageMat == null)
+        {
+            SetTexture(tex);
+            return;
+        }
+
+        stimulusImageMat.mainTexture = tex;
+        stimulusImageRenderer.gameObject.SetActive(true);
+    }
+
+    private void HideStimulusImage()
+    {
+        if (stimulusImageRenderer != null)
+            stimulusImageRenderer.gameObject.SetActive(false);
+    }
+
     private void ShowCrosshair(bool enable)
     {
+        HideStimulusImage();
+
         if (enable)
             SetTexture(crosshairTexture != null ? crosshairTexture : grayTex);
+        else
+            SetTexture(grayTex);
     }
 
-    private string MakeOrderKey(string sessionName, int speedMs)
+    private string MakeOrderKey(string sessionName)
     {
-        return $"{sessionName.Trim().ToUpperInvariant()}_{speedMs}MS";
+        string safeSession = string.IsNullOrWhiteSpace(sessionName)
+            ? "SESSION"
+            : sessionName.Trim().ToUpperInvariant();
+
+        return $"IMAGE_ORDER_{safeSession}";
     }
 
-    private System.Random CreateDeterministicRandom(string key)
+    private DeterministicRandom CreateDeterministicRandom(string key)
     {
         int keyHash = StableHash(key);
         int seed = fixedSequenceSeed ^ keyHash;
-        return new System.Random(seed);
+        return new DeterministicRandom(seed);
     }
 
     private int StableHash(string text)
@@ -555,11 +619,13 @@ public class RSVP : MonoBehaviour
         unchecked
         {
             int hash = 23;
+
             if (!string.IsNullOrEmpty(text))
             {
                 for (int i = 0; i < text.Length; i++)
                     hash = hash * 31 + text[i];
             }
+
             return hash;
         }
     }
@@ -569,7 +635,7 @@ public class RSVP : MonoBehaviour
         return string.IsNullOrWhiteSpace(value) ? "NA" : value;
     }
 
-    private void Shuffle<T>(IList<T> array, System.Random rng)
+    private void Shuffle<T>(IList<T> array, DeterministicRandom rng)
     {
         if (array == null || rng == null) return;
 
@@ -579,6 +645,53 @@ public class RSVP : MonoBehaviour
             T temp = array[i];
             array[i] = array[j];
             array[j] = temp;
+        }
+    }
+
+    private string DescribeBlockOrder(CategoryBlock[] blocks)
+    {
+        if (blocks == null || blocks.Length == 0)
+            return "Empty";
+
+        List<string> names = new List<string>();
+
+        foreach (var block in blocks)
+        {
+            if (block == null)
+                names.Add("NULL");
+            else
+                names.Add(SafeName(block.name));
+        }
+
+        return string.Join(" -> ", names);
+    }
+
+    private class DeterministicRandom
+    {
+        private uint state;
+
+        public DeterministicRandom(int seed)
+        {
+            state = seed == 0 ? 2463534242u : unchecked((uint)seed);
+        }
+
+        private uint NextUInt()
+        {
+            uint x = state;
+            x ^= x << 13;
+            x ^= x >> 17;
+            x ^= x << 5;
+            state = x;
+            return x;
+        }
+
+        public int Next(int minInclusive, int maxExclusive)
+        {
+            if (maxExclusive <= minInclusive)
+                return minInclusive;
+
+            uint range = (uint)(maxExclusive - minInclusive);
+            return minInclusive + (int)(NextUInt() % range);
         }
     }
 }

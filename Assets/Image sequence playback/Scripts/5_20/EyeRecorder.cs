@@ -135,7 +135,8 @@ public class EyeRecorder : MonoBehaviour
 
         frameCounter = 0;
         recordStartTime = Time.realtimeSinceStartup;
-
+        
+        ResetRecordingState(BlockType.Baseline);
         isRecording = true;
 
         samplerThread = new Thread(SamplerLoop);
@@ -171,6 +172,19 @@ public class EyeRecorder : MonoBehaviour
         Debug.Log($"Total samples: {frameCounter}");
         Debug.Log($"Duration: {duration:F2}s");
         Debug.Log($"Effective Rate: {fps:F2} Hz");
+    }
+
+    public static void ResetRecordingState(BlockType initialBlock = BlockType.Baseline)
+    {
+        CurrentBlock = initialBlock;
+        CurrentTrial = -1;
+        CurrentCategory = "NA";
+        CurrentIndex = -1;
+        CurrentImageName = "NA";
+
+        CurrentIsTarget = 0;
+        CurrentTargetImageName = "NA";
+        CurrentTargetPosition = -1;
     }
 
     private void SamplerLoop()
